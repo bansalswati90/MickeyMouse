@@ -1,6 +1,7 @@
 ####SWATI-DATA CLEANING(REMOVING UNWANTED COLUMNS####
-raw.loan <- read.csv("loan.csv",header = T)
 
+# Data Cleaning
+raw.loan <- read.csv("loan.csv",header = T, stringsAsFactors = FALSE)
 loan <- raw.loan
 
 str(loan)
@@ -73,9 +74,14 @@ table(loan$tax_liens)
 #tot_hi_cred_lim	total_bal_ex_mort	total_bc_limit	total_il_high_credit_limit has NA values
 
 #this removes columns with no variance, the columnswhich has single value
-clean_loan<-loans[sapply(loans, function(x) length(unique(x))>1)]
-ncol(loans) - ncol(clean_loan)
+clean_loan<-loan [sapply(loan, function(x) length(unique(x))>1)]
+ncol(loan) - ncol(clean_loan)
 # 60
+
+# Remove columns with no varience at all. i.e. with Constant value
+clean_loan<-clean_loan [sapply(clean_loan, function(x) length(unique(na.omit(x)))>1)]
+ncol(loan) - ncol(clean_loan)
+# 48
 
 write.csv(clean_loan,"clean.loan.csv",row.names = F)
 #################################################################################
