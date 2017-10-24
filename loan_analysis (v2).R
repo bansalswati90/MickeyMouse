@@ -18,7 +18,7 @@ length(unique(loan$member_id))
 
 #Changing Column format
 loan <- loan %>% mutate(
-  int_rate_perc = as.numeric(gsub("%", "", int_rate)), #Change the percentages to numbers
+  int_rate_perc = as.numeric(gsub("%", "", int_rate_perc)), #Change the percentages to numbers
   emp_title = as.character(emp_title),
   ##issue_d = as.Date() -- Am not getting the date format
   url = as.character(url),
@@ -27,9 +27,26 @@ loan <- loan %>% mutate(
   delinq_2yrs = factor(delinq_2yrs),
   ##earliest_cr_line = as.Date(),
   inq_last_6mths = factor(inq_last_6mths),
-  revol_util_perc = as.numeric(gsub("%", "", revol_util))
+  revol_util_perc = as.numeric(gsub("%", "", revol_util_perc))
   ##last_pymnt_d = as.Date()
 )
+
+#For formatting date
+#Creating a function to format date
+customformatdate <- function(x) {
+  x <- paste("01", x, sep = "-")
+  x <- as.Date(x, format = "%d-%b-%y")
+}
+
+loan$issue_d <- customformatdate(loan$issue_d)
+
+loan$earliest_cr_line <- customformatdate(loan$earliest_cr_line)
+
+loan$last_pymnt_d <- customformatdate(loan$last_pymnt_d)
+
+loan$next_pymnt_d <- customformatdate(loan$next_pymnt_d)
+
+loan$last_credit_pull_d <- customformatdate(loan$last_credit_pull_d)
 
 #Checking the amounts - loan_amnt, funded_amnt, funded_amnt_inv
 summary(loan[,c(3,4,5,8)])
@@ -80,6 +97,6 @@ ncol(loan) - ncol(clean_loan)
 # Remove columns with no varience at all. i.e. with Constant value
 clean_loan<-clean_loan [sapply(clean_loan, function(x) length(unique(na.omit(x)))>1)]
 ncol(loan) - ncol(clean_loan)
-# 48
+# 48 columns left 63 removed
 
 write.csv(clean_loan,"clean.loan.csv",row.names = F)
