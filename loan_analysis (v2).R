@@ -18,7 +18,7 @@ length(unique(loan$member_id))
 
 #Changing Column format
 loan <- loan %>% mutate(
-  int_rate_perc = as.numeric(gsub("%", "", int_rate_perc)), #Change the percentages to numbers
+  int_rate_perc = as.numeric(gsub("%", "", int_rate)), #Change the percentages to numbers
   emp_title = as.character(emp_title),
   ##issue_d = as.Date() -- Am not getting the date format
   url = as.character(url),
@@ -27,7 +27,7 @@ loan <- loan %>% mutate(
   delinq_2yrs = factor(delinq_2yrs),
   ##earliest_cr_line = as.Date(),
   inq_last_6mths = factor(inq_last_6mths),
-  revol_util_perc = as.numeric(gsub("%", "", revol_util_perc))
+  revol_util_perc = as.numeric(gsub("%", "", revol_util))
   ##last_pymnt_d = as.Date()
 )
 
