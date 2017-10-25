@@ -1,8 +1,10 @@
 library(dplyr)
+library(ggplot2)
 
+#####################################################################################
+###LOADING DATA IN CORRECT FORMAT
 
-###IMPORTING DATA AND BASIC ANALYSIS
-unzip(zipfile = "loan.zip", exdir = ".")
+unzip(zipfile = "loan.zip", exdir = ".") #Don't run if you have already extracted the Excel
 raw.loan <- read.csv("loan.csv",header = T)
 loan <- raw.loan
 
@@ -11,58 +13,86 @@ str(loan)
 summary(loan)
 #Some columns need to be converted as factors
 
-length(unique(loan$id))
-length(unique(loan$member_id))
-#All unique id's and member_id's
-
-
-#Changing Column format
-loan <- loan %>% mutate(
-  int_rate_perc = as.numeric(gsub("%", "", int_rate)), #Change the percentages to numbers
-  emp_title = as.character(emp_title),
-  ##issue_d = as.Date() -- Am not getting the date format
-  url = as.character(url),
-  desc = as.character(desc),
-  title = as.character(title),
-  delinq_2yrs = factor(delinq_2yrs),
-  ##earliest_cr_line = as.Date(),
-  inq_last_6mths = factor(inq_last_6mths),
-  revol_util_perc = as.numeric(gsub("%", "", revol_util))
-  ##last_pymnt_d = as.Date()
-)
-
-
-
-#For formatting date
-#Creating a function to format date
+#Creating a function for Date Formatting
 customformatdate <- function(x) {
   x <- paste("01", x, sep = "-")
   x <- as.Date(x, format = "%d-%b-%y")
 }
 
-loan$issue_d <- customformatdate(loan$issue_d)
+#Changing Column format
+loan <- loan %>% mutate(
+  int_rate_perc = as.numeric(gsub("%", "", int_rate)), #Change the percentages to numbers
+  emp_title = as.character(emp_title),
+  issue_d = customformatdate(issue_d),
+  url = as.character(url),
+  desc = as.character(desc),
+  title = as.character(title),
+  delinq_2yrs = factor(delinq_2yrs),
+  earliest_cr_line = customformatdate(earliest_cr_line),
+  inq_last_6mths = factor(inq_last_6mths),
+  revol_util_perc = as.numeric(gsub("%", "", revol_util)), #Change the percentages to numbers
+  last_pymnt_d = customformatdate(last_pymnt_d),
+  next_pymnt_d = customformatdate(next_pymnt_d),
+  last_credit_pull_d = customformatdate(last_credit_pull_d)
+)
 
-loan$earliest_cr_line <- customformatdate(loan$earliest_cr_line)
+summary(loan)
 
-loan$last_pymnt_d <- customformatdate(loan$last_pymnt_d)
+# Remove columns with no variance i.e. columns with single value
+clean_loan<-loan [sapply(loan, function(x) length(unique(x))>1)]
+ncol(loan) - ncol(clean_loan)
+# 60
 
-loan$next_pymnt_d <- customformatdate(loan$next_pymnt_d)
+# Remove columns with no varience at all. i.e. with Constant value
+clean_loan <- clean_loan [sapply(clean_loan, function(x) length(unique(na.omit(x)))>1)]
+ncol(loan) - ncol(clean_loan)
+# Total 63 columns removed
 
-loan$last_credit_pull_d <- customformatdate(loan$last_credit_pull_d)
 
-#Checking the amounts - loan_amnt, funded_amnt, funded_amnt_inv
-summary(loan[,c(3,4,5,8)])
 
-summary(factor(loan$term))
+#####################################################################################
+###BASIC DATA INTEGRITY CHECK
+
+sum(duplicated(clean_loan$id))
+sum(duplicated(clean_loan$member_id))
+#All unique id's and member_id's
+
+
+#Checking the amounts 
+#loan_amnt, funded_amnt, funded_amnt_inv, installment, annual_inc
+summary(clean_loan[,c(3,4,5,8, 14)])
+
+summary(factor(clean_loan$term))
 #36 months - 29096  
 #60 months - 10621 
 
-
-levels(loan$grade) 
+levels(clean_loan$grade) 
 #7 levels "A" "B" "C" "D" "E" "F" "G"
 
-levels(loan$sub_grade) 
+levels(clean_loan$sub_grade) 
 # 35 levels A1-A5, B1-B5, C1-C5 , D1-D5 , E1-E5, F1-F5, G1-G5
+
+
+#to determine duplicates
+sum(duplicated(clean_loan$id))
+sum(duplicated(clean_loan$member_id))
+
+#to check any more NA's
+sum(is.na(clean_loan)) #102011
+
+sum(is.na(clean_loan$id))
+sum(is.na(clean_loan$member_id))
+sum(is.na(clean_loan$loan_amnt))
+sum(is.na(clean_loan$funded_amnt))
+
+sum(is.na(clean_loan$next_pymnt_d)) #38577
+sum(is.na(clean_loan$mths_since_last_delinq)) #25682
+sum(is.na(clean_loan$mths_since_last_record))#36931
+
+########### What is this code? ##############
+
+#checking Blank values remaining---pending not done yet
+sapply(clean_loan, function(x) length(which(x=="")))
 
 #pymnt_plan has only 'n' value
 #initial_list_status has only 'f' value
@@ -76,7 +106,7 @@ levels(loan$sub_grade)
 #tot_coll_amt	tot_cur_bal	open_acc_6m	open_il_6m	open_il_12m	open_il_24m	mths_since_rcnt_il	total_bal_il	il_util	open_rv_12m has only NA value
 #open_rv_24m	max_bal_bc	all_util	total_rev_hi_lim	inq_fi	total_cu_tl	inq_last_12m	acc_open_past_24mths	avg_cur_bal	bc_open_to_buy	bc_util has only NA value
 
-table(loan$chargeoff_within_12_mths)
+table(clean_loan$chargeoff_within_12_mths)
 #chargeoff_within_12_mths has 0 and NA values
 #collections_12_mths_ex_med has 0 and NA values
 
@@ -92,57 +122,70 @@ table(loan$tax_liens)
 
 #tot_hi_cred_lim	total_bal_ex_mort	total_bc_limit	total_il_high_credit_limit has NA values
 
-#this removes columns with no variance, the columnswhich has single value
-clean_loan<-loan [sapply(loan, function(x) length(unique(x))>1)]
-ncol(loan) - ncol(clean_loan)
-# 60
 
-# Remove columns with no varience at all. i.e. with Constant value
-clean_loan1<-clean_loan [sapply(clean_loan, function(x) length(unique(na.omit(x)))>1)]
-ncol(clean_loan) - ncol(clean_loan1)
-# 48 columns left 63 removed
 
-#to determine duplicates
-sum(duplicated(clean_loan1$id))
-sum(duplicated(clean_loan1$member_id))
 
-#to check any more NA's
-sum(is.na(clean_loan1))
-#102011
-sum(is.na(clean_loan1$id))
-sum(is.na(clean_loan1$member_id))
-sum(is.na(clean_loan1$loan_amnt))
-sum(is.na(clean_loan1$funded_amnt))
-sum(is.na(clean_loan1$next_pymnt_d))
-#38577
-sum(is.na(clean_loan1$mths_since_last_delinq))
-#25682
-sum(is.na(clean_loan1$mths_since_last_record))
-#36931
 
-#checking Blank values remaining---pending not done yet
-sapply(clean_loan1 ,function(x) length(which(x=="")))
-
-write.csv(clean_loan1,"clean.loan.csv",row.names = F)
+write.csv(clean_loan,"clean.loan.csv",row.names = F)
 
 
 #####################################################################################
-#Deriving columns
-#Creating interst rates bins
-clean_loan1$int_rate_grp[clean_loan1$int_rate_perc < 10] <- "Low"
-clean_loan1$int_rate_grp[(clean_loan1$int_rate_perc >= 10) & (clean_loan1$int_rate_perc <= 18)] <- "Medium"
-clean_loan1$int_rate_grp[clean_loan1$int_rate_perc > 18] <- "High"
+###Deriving columns
+
+# Creating interst rates Bins
+clean_loan <- clean_loan %>%
+  mutate(int_rate_grp = ifelse(int_rate_perc < 10, "Low",
+                               ifelse((int_rate_perc >= 10 & int_rate_perc < 18), "Medium", "High"))) %>%
+  mutate(int_rate_grp = factor(int_rate_grp))
+
+summary(clean_loan$int_rate_grp)
 
 ####################################################################################
+### PREPPING FOR PLOTTING US MAP USING GGPLOT 
 
-ggplot(clean_loan1,aes(x=clean_loan1$loan_status,fill=loan_status))+
+#states_map contains every Latitude and Longitude for each US States
+states_map <-map_data("state") 
+
+#states_code contains state names and their two letter abbreviated codes
+states_code <- as.data.frame(state.abb, state.name)  %>% add_rownames("State") %>% mutate(State=tolower(State))
+names(states_code) <- c('State', 'State_abrv')
+states_code$State_abrv <- as.character(states_code$State_abrv)
+
+# The dataset do not have State Code for North Dakota. Instead it has an extra DC Code
+# This is not 'Washington DC' as the code for Washington DC is 'WA'
+# Hence, making 'north dakota' as DC for easy joining.
+states_code$State_abrv[states_code$State == "north dakota"] <- 'DC'
+
+
+clean_loan <- merge(clean_loan, states_code, by.x = 'addr_state', by.y = 'State_abrv', all.x = TRUE)
+
+
+# Basic structure of the US Map
+map <- ggplot(clean_loan, aes(map_id = State)) + 
+  expand_limits(x = states_map$long, y = states_map$lat) +
+  theme(legend.position = "bottom",
+        axis.ticks = element_blank(), 
+        axis.title = element_blank(), 
+        axis.text =  element_blank())+
+  guides(fill = guide_colorbar(barwidth = 10, barheight = .5)) + 
+  scale_fill_gradient(low="#56B1F7", high="#132B43")
+
+####################################################################################
+###PLOTS
+
+# Plot showing US States with most Loan
+map + geom_map(aes(fill = loan_amnt), map = states_map) +
+  guides(fill=guide_legend(title="Loan Amount")) +
+  labs(title = "Loan Spread")
+
+ggplot(clean_loan,aes(x=clean_loan$loan_status,fill=loan_status))+
   geom_bar()+
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
   guides(fill=guide_legend("Loan Status")) +
   labs(x = "Loan Status ", y ="Count")+
   theme_bw()
 
-chargedoff_subset <- subset(clean_loan1, clean_loan1$loan_status=="Charged Off")
+chargedoff_subset <- subset(clean_loan, clean_loan$loan_status=="Charged Off")
 
 
 ggplot(chargedoff_subset,aes(x=chargedoff_subset$grade,fill=grade))+
@@ -212,3 +255,4 @@ ggplot(chargedoff_subset,aes(x=as.factor(chargedoff_subset$int_rate_grp) , y = c
   geom_boxplot() +
   labs(x = "Interest Rate", y ="Annual Income") +
   theme_bw()
+
