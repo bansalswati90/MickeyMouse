@@ -31,6 +31,8 @@ loan <- loan %>% mutate(
   ##last_pymnt_d = as.Date()
 )
 
+
+
 #For formatting date
 #Creating a function to format date
 customformatdate <- function(x) {
@@ -76,6 +78,7 @@ levels(loan$sub_grade)
 
 table(loan$chargeoff_within_12_mths)
 #chargeoff_within_12_mths has 0 and NA values
+#collections_12_mths_ex_med has 0 and NA values
 
 #delinq_amnt has only 0 value
 #mo_sin_old_il_acct	mo_sin_old_rev_tl_op	mo_sin_rcnt_rev_tl_op	mo_sin_rcnt_tl	mort_acc	mths_since_recent_bc	mths_since_recent_bc_dlq	mths_since_recent_inq	mths_since_recent_revol_delinq	num_accts_ever_120_pd	num_actv_bc_tl	num_actv_rev_tl	num_bc_sats	num_bc_tl	num_il_tl	num_op_rev_tl	num_rev_accts	num_rev_tl_bal_gt_0	num_sats	num_tl_120dpd_2m	num_tl_30dpd	num_tl_90g_dpd_24m	num_tl_op_past_12m	pct_tl_nvr_dlq	percent_bc_gt_75 has all NA values
@@ -85,7 +88,7 @@ table(loan$pub_rec_bankruptcies)
 #has 0 1 2 and NA value
 
 table(loan$tax_liens)
-#has 0 and NA value
+#tax_liens has 0 and NA value
 
 #tot_hi_cred_lim	total_bal_ex_mort	total_bc_limit	total_il_high_credit_limit has NA values
 
@@ -95,8 +98,117 @@ ncol(loan) - ncol(clean_loan)
 # 60
 
 # Remove columns with no varience at all. i.e. with Constant value
-clean_loan<-clean_loan [sapply(clean_loan, function(x) length(unique(na.omit(x)))>1)]
-ncol(loan) - ncol(clean_loan)
+clean_loan1<-clean_loan [sapply(clean_loan, function(x) length(unique(na.omit(x)))>1)]
+ncol(clean_loan) - ncol(clean_loan1)
 # 48 columns left 63 removed
 
-write.csv(clean_loan,"clean.loan.csv",row.names = F)
+#to determine duplicates
+sum(duplicated(clean_loan1$id))
+sum(duplicated(clean_loan1$member_id))
+
+#to check any more NA's
+sum(is.na(clean_loan1))
+#102011
+sum(is.na(clean_loan1$id))
+sum(is.na(clean_loan1$member_id))
+sum(is.na(clean_loan1$loan_amnt))
+sum(is.na(clean_loan1$funded_amnt))
+sum(is.na(clean_loan1$next_pymnt_d))
+#38577
+sum(is.na(clean_loan1$mths_since_last_delinq))
+#25682
+sum(is.na(clean_loan1$mths_since_last_record))
+#36931
+
+#checking Blank values remaining---pending not done yet
+sapply(clean_loan1 ,function(x) length(which(x=="")))
+
+write.csv(clean_loan1,"clean.loan.csv",row.names = F)
+
+
+#####################################################################################
+#Deriving columns
+#Creating interst rates bins
+clean_loan1$int_rate_grp[clean_loan1$int_rate_perc < 10] <- "Low"
+clean_loan1$int_rate_grp[(clean_loan1$int_rate_perc >= 10) & (clean_loan1$int_rate_perc <= 18)] <- "Medium"
+clean_loan1$int_rate_grp[clean_loan1$int_rate_perc > 18] <- "High"
+
+####################################################################################
+
+ggplot(clean_loan1,aes(x=clean_loan1$loan_status,fill=loan_status))+
+  geom_bar()+
+  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
+  guides(fill=guide_legend("Loan Status")) +
+  labs(x = "Loan Status ", y ="Count")+
+  theme_bw()
+
+chargedoff_subset <- subset(clean_loan1, clean_loan1$loan_status=="Charged Off")
+
+
+ggplot(chargedoff_subset,aes(x=chargedoff_subset$grade,fill=grade))+
+  geom_bar()+
+  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
+  guides(fill=guide_legend("Grades")) +
+  labs(x = "Loan Grade", y ="Count") +
+  theme_bw()
+
+ggplot(chargedoff_subset,aes(x=chargedoff_subset$sub_grade,fill=sub_grade))+
+  geom_bar()+
+  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
+  guides(fill=guide_legend("Sub Grades")) +
+  labs(x = "Loan Sub-Grades", y ="Count") +
+  theme_bw()
+
+ggplot(chargedoff_subset,aes(x=chargedoff_subset$home_ownership,fill=home_ownership))+
+  geom_bar()+
+  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
+  guides(fill=guide_legend("Home Ownership")) +
+  labs(x = "Home Ownership", y ="Count") +
+  theme_bw()
+
+ggplot(chargedoff_subset,aes(x=chargedoff_subset$verification_status,fill=verification_status))+
+  geom_bar()+
+  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
+  guides(fill=guide_legend("Verification Status")) +
+  labs(x = "Verification Status", y ="Count") +
+  theme_bw()
+
+ggplot(chargedoff_subset,aes(x=chargedoff_subset$purpose,fill=purpose))+
+  geom_bar() +
+  coord_flip()+
+  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
+  guides(fill=guide_legend("Purpose")) +
+  labs(x = "Loan Purpose", y ="Count") +
+  theme_bw()
+
+ggplot(chargedoff_subset,aes(x=chargedoff_subset$term,fill=term))+
+  geom_bar()+
+  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
+  guides(fill=guide_legend("Term")) +
+  labs(x = "Loan Term", y ="Count") +
+  theme_bw()
+
+#Annual income and dti are the main driving factor
+ggplot(chargedoff_subset,aes(x=chargedoff_subset$annual_inc))+
+  geom_histogram(bins=100) +
+  labs(x = "Annual Income", y ="Count") +
+  theme_bw()
+
+ggplot(chargedoff_subset,aes(x=chargedoff_subset$dti))+
+  geom_histogram() +
+  labs(x = "DTI", y ="Count") +
+  theme_bw()
+
+ggplot(chargedoff_subset,aes(x=chargedoff_subset$int_rate_perc))+
+  geom_histogram() +
+  labs(x = "Interest Rate", y ="Count") +
+  theme_bw()
+
+
+
+#Box plots on measure variables
+
+ggplot(chargedoff_subset,aes(x=as.factor(chargedoff_subset$int_rate_grp) , y = chargedoff_subset$annual_inc))+
+  geom_boxplot() +
+  labs(x = "Interest Rate", y ="Annual Income") +
+  theme_bw()
