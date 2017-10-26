@@ -1,5 +1,6 @@
 library(dplyr)
 library(ggplot2)
+library(maps)
 
 #####################################################################################
 ###LOADING DATA IN CORRECT FORMAT
@@ -49,7 +50,8 @@ ncol(loan) - ncol(clean_loan)
 # Total 63 columns removed
 
 
-
+# Since all loans are individual loans we can remove columns like id, member_id ...removing zipcode
+clean_loan <- subset(clean_loan, select=-c(id,member_id,url,desc,title,zip_code))
 #####################################################################################
 ###BASIC DATA INTEGRITY CHECK
 
@@ -139,6 +141,7 @@ clean_loan <- clean_loan %>%
   mutate(int_rate_grp = factor(int_rate_grp))
 
 summary(clean_loan$int_rate_grp)
+
 
 ####################################################################################
 ### PREPPING FOR PLOTTING US MAP USING GGPLOT 
@@ -248,6 +251,8 @@ ggplot(chargedoff_subset,aes(x=chargedoff_subset$int_rate_perc))+
   theme_bw()
 
 
+ggplot(clean_loan,aes(x=clean_loan$annual_inc))+
+  geom_histogram()
 
 #Box plots on measure variables
 
@@ -255,4 +260,5 @@ ggplot(chargedoff_subset,aes(x=as.factor(chargedoff_subset$int_rate_grp) , y = c
   geom_boxplot() +
   labs(x = "Interest Rate", y ="Annual Income") +
   theme_bw()
+
 
