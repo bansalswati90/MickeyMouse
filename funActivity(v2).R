@@ -53,10 +53,11 @@ clean_loan <- clean_loan %>% mutate(
   revol_util_perc = as.numeric(gsub("%", "", revol_util)), #Change the percentages to numbers
   last_pymnt_d = customformatdate(last_pymnt_d),
   next_pymnt_d = customformatdate(next_pymnt_d),
-  last_credit_pull_d = customformatdate(last_credit_pull_d)
+  last_credit_pull_d = customformatdate(last_credit_pull_d),
+  emp_length_yr = as.numeric(gsub("\\D", "", emp_length)) #Change the emp length to numbers
 )
 
-summary(loan)
+summary(clean_loan)
 
 
 #####################################################################################
@@ -196,6 +197,13 @@ ggplot(chargedoff_subset,aes(x=chargedoff_subset$term,fill=term))+
   labs(x = "Loan Term", y ="Count") +
   theme_bw()
 
+ggplot(chargedoff_subset,aes(x=chargedoff_subset$emp_length_yr))+
+  geom_bar() +
+  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5)) +
+  labs(x = "Employement Length", y ="Count") +
+  scale_x_continuous(breaks = c(1:10)) +
+  theme_bw()
+
 #Annual income and dti are the main driving factor
 ggplot(chargedoff_subset,aes(x=chargedoff_subset$annual_inc))+
   geom_histogram(bins=100) +
@@ -211,7 +219,6 @@ ggplot(chargedoff_subset,aes(x=chargedoff_subset$int_rate_perc))+
   geom_histogram() +
   labs(x = "Interest Rate", y ="Count") +
   theme_bw()
-
 
 ggplot(clean_loan,aes(x=clean_loan$annual_inc))+
   geom_histogram()
