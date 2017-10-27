@@ -105,14 +105,6 @@ clean_loan <- clean_loan %>%
 
 plot(clean_loan$int_rate_grp, main = 'Popular Interest Rate Range')
 
-# Creating new column 'term2' removing 'months' from 'term'
-clean_loan$term2 <- as.numeric(str_replace(clean_loan$term, "months", ""))
-
-
-# Creating range columns 
-
-
-
 
 ####################################################################################
 ### PREPPING FOR PLOTTING US MAP USING GGPLOT 
@@ -241,7 +233,7 @@ ggplot(chargedoff_subset,aes(x=as.factor(chargedoff_subset$int_rate_grp) , y = c
 
 # Correlation matrix
 
-
+clean_loan$term2 <- as.numeric(str_replace(clean_loan$term, "months", ""))
 #clean_loan2 <- Filter(var, clean_loan)
 clean_loan_measures <- Filter(is.numeric, clean_loan)
 #clean_loan_measures <- sapply(clean_loan, is.numeric) Filter(checkUniqueVals, clean_loan_measures)
