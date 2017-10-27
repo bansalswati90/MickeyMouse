@@ -12,7 +12,7 @@ library(janitor)
 # Don't run below code if you've already extracted the CSV file
 unzip(zipfile = "loan.zip", exdir = ".")
 
-raw.loan <- read.csv("loan.csv",header = T)
+raw.loan <- read.csv("loan.csv",header = T, na.strings=c("NA","NaN", " ", "n/a"))
 
 dim(raw.loan) #39717 rows and #111 columns
 str(raw.loan)
@@ -53,8 +53,7 @@ clean_loan <- clean_loan %>% mutate(
   revol_util_perc = as.numeric(gsub("%", "", revol_util)), #Change the percentages to numbers
   last_pymnt_d = customformatdate(last_pymnt_d),
   next_pymnt_d = customformatdate(next_pymnt_d),
-  last_credit_pull_d = customformatdate(last_credit_pull_d),
-  emp_length_yr = as.numeric(gsub("\\D", "", emp_length)) #Change the emp length to numbers
+  last_credit_pull_d = customformatdate(last_credit_pull_d)
 )
 
 summary(clean_loan)
