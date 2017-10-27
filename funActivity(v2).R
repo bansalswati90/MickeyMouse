@@ -12,7 +12,7 @@ library(janitor)
 # Don't run below code if you've already extracted the CSV file
 unzip(zipfile = "loan.zip", exdir = ".")
 
-raw.loan <- read.csv("loan.csv",header = T, na.strings=c("NA","NaN", " ", "n/a"))
+raw.loan <- read.csv("loan.csv",header = T, na.strings=c("NA", "n/a"))
 
 dim(raw.loan) #39717 rows and #111 columns
 str(raw.loan)
@@ -96,13 +96,7 @@ clean_loan %>%
 #####################################################################################
 ###Deriving columns
 
-# Creating interst rates Bins
-clean_loan <- clean_loan %>%
-  mutate(int_rate_grp = ifelse(int_rate_perc < 10, "Low",
-                               ifelse((int_rate_perc >= 10 & int_rate_perc < 18), "Medium", "High"))) %>%
-  mutate(int_rate_grp = factor(int_rate_grp))
 
-plot(clean_loan$int_rate_grp, main = 'Popular Interest Rate Range')
 
 
 ####################################################################################
@@ -164,7 +158,7 @@ ggplot(chargedoff_subset,aes(x=chargedoff_subset$sub_grade,fill=sub_grade))+
   geom_bar()+
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
   guides(fill=guide_legend("Sub Grades")) +
-  labs(x = "Loan Sub-Grades", y ="Count") +
+  labs(x = "Loan Sub-Grades", y ="Count")
   theme_bw()
 
 ggplot(chargedoff_subset,aes(x=chargedoff_subset$home_ownership,fill=home_ownership))+
@@ -196,11 +190,10 @@ ggplot(chargedoff_subset,aes(x=chargedoff_subset$term,fill=term))+
   labs(x = "Loan Term", y ="Count") +
   theme_bw()
 
-ggplot(chargedoff_subset,aes(x=chargedoff_subset$emp_length_yr))+
+ggplot(chargedoff_subset,aes(x=chargedoff_subset$emp_length))+
   geom_bar() +
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5)) +
   labs(x = "Employement Length", y ="Count") +
-  scale_x_continuous(breaks = c(1:10)) +
   theme_bw()
 
 #Annual income and dti are the main driving factor
@@ -224,7 +217,7 @@ ggplot(clean_loan,aes(x=clean_loan$annual_inc))+
 
 #Box plots on measure variables
 
-ggplot(chargedoff_subset,aes(x=as.factor(chargedoff_subset$int_rate_grp) , y = chargedoff_subset$annual_inc))+
+ggplot(chargedoff_subset,aes(x=as.factor(chargedoff_subset$int_rate) , y = chargedoff_subset$annual_inc))+
   geom_boxplot() +
   labs(x = "Interest Rate", y ="Annual Income") +
   theme_bw()
