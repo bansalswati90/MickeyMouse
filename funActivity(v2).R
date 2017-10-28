@@ -182,14 +182,18 @@ clean_loan <- clean_loan %>%
 
 # Creating buckets for Revolving Buckets
 clean_loan = mutate(clean_loan, revol = as.numeric(gsub("%","",revol_util)))
-grp <- quantile(clean_loan$revol_util_perc, seq(0,1,0.1))
+grp <- quantile(clean_loan$revol_util_perc, seq(0,1,0.1), na.rm = TRUE)
 labels <- c(0, round(grp[2:10], 0), "+inf")
 labels <- paste(labels[1:10], labels[2:11], sep = "-")
-clean_loan <- mutate(clean_loan, revol_bucket = cut(clean_loan$revol_util_perc, breaks = grp, labels = factor(labels), include.lowest=TRUE))
+clean_loan <- clean_loan %>% 
+  mutate(revol_bucket = cut(clean_loan$revol_util_perc, breaks = grp, labels = factor(labels), include.lowest=TRUE))
 
 # Creating buckets for Revolving Balance Buckets
-
-# Creating buckets for Total Accounts Buckets
+grp <- quantile(clean_loan$revol_bal, seq(0,1,0.1))
+labels <- c(0, round(grp[2:10], 0), "+inf")
+labels <- paste(labels[1:10], labels[2:11], sep = "-")
+clean_loan <- clean_loan %>% 
+  mutate(revol_bal_bucket = cut(clean_loan$revol_bal, breaks = grp, labels = factor(labels), include.lowest=TRUE))
 
 
 
