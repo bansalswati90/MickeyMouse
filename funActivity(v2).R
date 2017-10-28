@@ -150,6 +150,19 @@ sumAmnts(clean_loan, issue_month) %>% arrange(desc(total_issued))
 # Creating buckets for 2 year delinquency
 mutate(clean_loan, delinq_bucket = ifelse(delinq_2yrs >= 2, "2+", delinq_2yrs))
 
+# Creating buckets for inq_bucket
+
+# Creating buckets for rec_bucket
+
+# Creating buckets for Income Buckets
+
+# Creating buckets for Revolving Buckets
+
+# Creating buckets for Revolving Balance Buckets
+
+# Creating buckets for Total Accounts Buckets
+
+
 
 ####################################################################################
 ### PREPPING FOR PLOTTING US MAP USING GGPLOT 
