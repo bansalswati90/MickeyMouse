@@ -1,3 +1,9 @@
+# Check if package is installed in the system. If not install automatically
+list.of.packages <- c("dplyr", "ggplot2", "maps", "reshape2", "corrplot", "stringr", "mapproj")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+#Loading Packages
 library(dplyr)
 library(ggplot2)
 library(maps)
@@ -22,6 +28,32 @@ summary(raw.loan)
 
 
 #####################################################################################
+### USER DEFINED FUNCTIONS USED IN THE STUDY
+
+# Converts Month-Year character to R readable Date format
+customformatdate <- function(x) {
+  x <- paste("01", x, sep = "-")
+  x <- as.Date(x, format = "%d-%b-%y")
+}
+
+# Create summary by grouping ... and showing Total Loan Amount and Number of Loans
+sumAmnts <- function(x, ...) {
+  x %>% 
+    group_by(., ...) %>%
+    summarise(total_issued = round(sum(loan_amnt)),
+              n = prettyNum(round(n()), big.mark = ","))
+}
+
+# Create summary by grouping ... and showing useful stats about the group
+sumStats <- function(x, ...) {
+  x %>% 
+    group_by(., ...) %>%
+    summarise(median = round(median(loan_amnt)),
+              average = round(mean(loan_amnt)),
+              stdev = round(sd(loan_amnt)))
+}
+
+#####################################################################################
 ### CLEANING DATA
 
 # Removing columns with no variance i.e. columns with single values (even NA)
@@ -37,11 +69,6 @@ ncol(raw.loan) - ncol(clean_loan)
 # Since all loans are individual loans we can remove columns like id, member_id, zipcode etc
 clean_loan <- subset(clean_loan, select = -c(id,member_id,url,desc,title,zip_code))
 
-#Creating a Custom Function to Format Dates to correct format
-customformatdate <- function(x) {
-  x <- paste("01", x, sep = "-")
-  x <- as.Date(x, format = "%d-%b-%y")
-}
 
 #Changing Column formatting
 clean_loan <- clean_loan %>% mutate(
@@ -64,18 +91,20 @@ summary(clean_loan)
 
 
 #####################################################################################
-###BASIC ANALYSIS
+###BASIC ANALYSIS AND CHECKING IF FURTHER CLEANING IS REQUIRED
 
 #Checking the amounts 
 #loan_amnt, funded_amnt, funded_amnt_inv, installment, annual_inc
-summary(clean_loan[,c(3,4,5,8, 14)])
+summary(clean_loan[,c(1,2,3,6, 12)])
 
-# States with majority of Loans 
-clean_loan %>% 
-  group_by(addr_state) %>% 
-  summarise(count = n()) %>% 
-  arrange(desc(count))
+table(clean_loan$term)
+# 2 terms - 36 months and 60 months
 
+table(clean_loan$grade)
+#Ranges from A to G
+
+table(clean_loan$sub_grade)
+#Ranges from 5 sub grades for each grades - ranging from 1 to 5
 
 # Plotting basic plots to get basic understanding
 # Plots related to Loan
@@ -84,6 +113,16 @@ plot(clean_loan$term, main = 'Loan Terms')
 plot(clean_loan$grade, main = 'Assigned Loan Grade')
 plot(clean_loan$loan_status, main = 'Loan Status')
 
+table(clean_loan$home_ownership)
+# MORTGAGE - 17659; RENT - 18899; OWN - 3058
+# NONE - 3; OTHER - 98
+# The count of NONE is really low and this will not provide any concrete results
+# Merging NONE with OTHER
+
+clean_loan$home_ownership <- gsub("NONE", "OTHER", clean_loan$home_ownership)
+table(clean_loan$home_ownership)
+# 4 levels - Mortgage, Own, Rent, Other
+
 # Plots related to the Borrower
 par(mfrow = c(1,2))
 plot(clean_loan$verification_status, main = 'Borrower Income Verification Status')
@@ -91,16 +130,25 @@ plot(clean_loan$home_ownership, main = 'Home Ownership of the Borrower')
 par(mfrow = c(1,1))
 
 # Most popular category provided by borrower for loan request.
-clean_loan %>% 
-  group_by(purpose) %>% 
-  summarise(count = n()) %>% 
-  arrange(desc(count))
+sumAmnts(clean_loan, purpose) %>% 
+  arrange(desc(total_issued))
 
+# States with majority of Loans 
+sumAmnts(clean_loan, addr_state) %>% 
+  arrange(desc(total_issued))
 
 #####################################################################################
 ###Deriving columns
 
+# Extracting Year and Month from Loan Issued Date
 clean_loan$issue_year <- format(clean_loan$issue_d, "%Y")
+clean_loan$issue_month <- format(clean_loan$issue_d, "%b")
+
+sumAmnts(clean_loan, issue_year)
+sumAmnts(clean_loan, issue_month) %>% arrange(desc(total_issued))
+
+# Creating buckets for 2 year delinquency
+mutate(clean_loan, delinq_bucket = ifelse(delinq_2yrs >= 2, "2+", delinq_2yrs))
 
 
 ####################################################################################
