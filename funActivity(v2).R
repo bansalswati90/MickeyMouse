@@ -4,6 +4,7 @@ library(maps)
 library(reshape2)
 library(corrplot)
 library(stringr)
+library(mapproj)
 
 #####################################################################################
 ### LOADING DATA
@@ -132,7 +133,8 @@ map <- ggplot(clean_loan, aes(map_id = State)) +
 # Plot showing US States with most Loan
 map + geom_map(aes(fill = loan_amnt), map = states_map) +
   guides(fill=guide_legend(title="Loan Amount")) +
-  labs(title = "States with most Loan")
+  labs(title = "States with most Loan") +
+  theme_bw()
 # North Dakota (ND) is missing from the dataset.
 
 # States Track Record
@@ -140,13 +142,15 @@ map + geom_map(aes(fill = loan_amnt), map = states_map) +
   guides(fill=guide_legend(title="Loan Amount")) +
   labs(title = "Loan Distribution") + 
   coord_map()+
-  facet_grid(~ loan_status, shrink = TRUE)
+  facet_grid(~ loan_status, shrink = TRUE) +
+  theme_bw()
 
 ggplot(clean_loan,aes(x=clean_loan$loan_status,fill=loan_status))+
   geom_bar()+
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
   guides(fill=guide_legend("Loan Status")) +
-  labs(x = "Loan Status ", y ="Count")+
+  labs(x = "Loan Status ", y ="Count") +
+  ggtitle("Frequency of Loan Status") +
   theme_bw()
 
 
@@ -155,13 +159,15 @@ ggplot(clean_loan,aes(x=clean_loan$grade,fill=loan_status))+
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
   guides(fill=guide_legend("Loan Status")) +
   labs(x = "Loan Grade", y ="Count") +
+  ggtitle("Frequency of Loan Grades") +
   theme_bw()
 
 ggplot(clean_loan,aes(x=clean_loan$sub_grade,fill=loan_status))+
   geom_bar()+
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
   guides(fill=guide_legend("Loan Status")) +
-  labs(x = "Loan Sub-Grades", y ="Count")
+  labs(x = "Loan Sub-Grades", y ="Count") +
+  ggtitle("Frequency of Loan Sub-Grades") +
   theme_bw()
 
 ggplot(clean_loan,aes(x=clean_loan$home_ownership,fill=loan_status))+
@@ -169,6 +175,7 @@ ggplot(clean_loan,aes(x=clean_loan$home_ownership,fill=loan_status))+
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
   guides(fill=guide_legend("Loan Status")) +
   labs(x = "Home Ownership", y ="Count") +
+  ggtitle("Frequency of Home Ownership") +
   theme_bw()
 
 ggplot(clean_loan,aes(x=clean_loan$verification_status,fill=loan_status))+
@@ -176,14 +183,16 @@ ggplot(clean_loan,aes(x=clean_loan$verification_status,fill=loan_status))+
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
   guides(fill=guide_legend("Loan Status")) +
   labs(x = "Verification Status", y ="Count") +
+  ggtitle("Frequency of Verification Status") +
   theme_bw()
 
 ggplot(clean_loan,aes(x=clean_loan$purpose,fill=loan_status))+
-  geom_bar() +
+  geom_bar(aes(y=..count..),position = "dodge") + 
+  geom_text(stat = 'count', aes(y=..count.. , label = ..count..),  position = position_dodge(width =0.5) , vjust = -0.25) +
   coord_flip()+
-  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
   guides(fill=guide_legend("Loan Status")) +
   labs(x = "Loan Purpose", y ="Count") +
+  ggtitle("Frequency of Loan Purpose") +
   theme_bw()
 
 ggplot(clean_loan,aes(x=clean_loan$term,fill=loan_status))+
@@ -191,6 +200,7 @@ ggplot(clean_loan,aes(x=clean_loan$term,fill=loan_status))+
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
   guides(fill=guide_legend("Loan Status")) +
   labs(x = "Loan Term", y ="Count") +
+  ggtitle("Frequency of Loan Term") +
   theme_bw()
 
 ggplot(clean_loan,aes(x=clean_loan$emp_length,fill=loan_status))+
@@ -198,22 +208,26 @@ ggplot(clean_loan,aes(x=clean_loan$emp_length,fill=loan_status))+
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5)) +
   labs(x = "Employement Length", y ="Count") +
   guides(fill=guide_legend("Loan Status")) +
+  ggtitle("Frequency of Employement") +
   theme_bw()
 
 #Annual income and dti are the main driving factor
 ggplot(clean_loan,aes(x=clean_loan$annual_inc,fill=loan_status))+
   geom_histogram(bins=100) +
   labs(x = "Annual Income", y ="Count") +
+  ggtitle("Frequency of Annual Income") +
   theme_bw()
 
 ggplot(clean_loan,aes(x=clean_loan$dti,fill=loan_status))+
   geom_histogram() +
   labs(x = "DTI", y ="Count") +
+  ggtitle("Frequency of DTI") +
   theme_bw()
 
 ggplot(clean_loan,aes(x=clean_loan$int_rate_perc,fill=loan_status))+
   geom_histogram() +
   labs(x = "Interest Rate", y ="Count") +
+  ggtitle("Frequency of Interest Rate") +
   theme_bw()
 
 ggplot(clean_loan,aes(x=clean_loan$annual_inc))+
@@ -269,4 +283,53 @@ clean_loan_measures_corMat_melted_3 <- filter(clean_loan_measures_corMat_melted_
 # 26 in m
 unique(clean_loan_measures_corMat_melted_3$Var1)
 
+#########################################################################################
+######BIVARIATE ANALYSIS PLOTS
+ggplot(clean_loan %>% 
+         select(issue_d, loan_amnt) %>% 
+         group_by(issue_d) %>% 
+         summarise(Amount = sum(loan_amnt)), aes(x = issue_d, y = Amount)) +
+  geom_line() + 
+  labs(x="Date issued", y="Amount")+
+  ggtitle("Loan Amount by Date Issued") +
+  theme_bw()
 
+#Distribution of loan amounts by status
+ggplot(clean_loan, aes(loan_status, loan_amnt))+
+  geom_boxplot(aes(fill = loan_status)) +
+  labs(x = "Status",y = "Amount") +
+  ggtitle("Loan amount by status") +
+  theme_bw()
+
+
+#Loan of different grades changing over time
+
+ggplot(clean_loan %>% 
+         select(issue_d, loan_amnt, grade) %>% 
+         group_by(issue_d, grade) %>% 
+         summarise(Amount = sum(loan_amnt)),aes(x = issue_d, y = Amount))+
+  geom_area(aes(fill=grade)) + 
+  labs(x="Date issued",y="Amount")+
+  ggtitle("Loan Amount by Date issued for different grades")+
+  theme_bw()
+
+
+
+ggplot(clean_loan %>% 
+         select(issue_d, loan_status) %>% 
+         group_by(issue_d) %>% 
+         summarise(Status= n()), aes(x = issue_d, y=Status))+
+  geom_line() + 
+  labs(x="Date issued")+
+  ggtitle("Status by Date issued") + 
+  theme_bw()
+
+
+ggplot(clean_loan %>% 
+         select(issue_d, dti) %>% 
+         group_by(issue_d) %>% 
+         summarise(DTI = sum(dti)), aes(x = issue_d, y = DTI))+
+  geom_line() + 
+  labs(x="Date issued")+
+  ggtitle("DTI by Date issued")+
+  theme_bw()
