@@ -132,9 +132,15 @@ map <- ggplot(clean_loan, aes(map_id = State)) +
 # Plot showing US States with most Loan
 map + geom_map(aes(fill = loan_amnt), map = states_map) +
   guides(fill=guide_legend(title="Loan Amount")) +
-  labs(title = "Loan Spread")
+  labs(title = "States with most Loan")
 # North Dakota (ND) is missing from the dataset.
 
+# States Track Record
+map + geom_map(aes(fill = loan_amnt), map = states_map) +
+  guides(fill=guide_legend(title="Loan Amount")) +
+  labs(title = "Loan Distribution") + 
+  coord_map()+
+  facet_grid(~ loan_status, shrink = TRUE)
 
 ggplot(clean_loan,aes(x=clean_loan$loan_status,fill=loan_status))+
   geom_bar()+
