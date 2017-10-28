@@ -99,7 +99,7 @@ clean_loan %>%
 #####################################################################################
 ###Deriving columns
 
-clean_loan$year <- format(clean_loan$issue_d, "%Y")
+clean_loan$issue_year <- format(clean_loan$issue_d, "%Y")
 
 
 ####################################################################################
