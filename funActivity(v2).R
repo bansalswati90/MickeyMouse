@@ -45,12 +45,16 @@ customformatdate <- function(x) {
 
 #Changing Column formatting
 clean_loan <- clean_loan %>% mutate(
-  int_rate_perc = as.numeric(gsub("%", "", int_rate)), #Change the percentages to numbers
-  issue_d = customformatdate(issue_d),
   delinq_2yrs = factor(delinq_2yrs),
-  earliest_cr_line = customformatdate(earliest_cr_line),
   inq_last_6mths = factor(inq_last_6mths),
-  revol_util_perc = as.numeric(gsub("%", "", revol_util)), #Change the percentages to numbers
+  
+  #Changing percentage fields to numbers
+  int_rate_perc = as.numeric(gsub("%", "", int_rate)),
+  revol_util_perc = as.numeric(gsub("%", "", revol_util)),
+
+  #Character to Date Conversion
+  issue_d = customformatdate(issue_d),
+  earliest_cr_line = customformatdate(earliest_cr_line),
   last_pymnt_d = customformatdate(last_pymnt_d),
   next_pymnt_d = customformatdate(next_pymnt_d),
   last_credit_pull_d = customformatdate(last_credit_pull_d)
