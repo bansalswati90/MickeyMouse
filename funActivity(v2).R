@@ -143,70 +143,67 @@ ggplot(clean_loan,aes(x=clean_loan$loan_status,fill=loan_status))+
   labs(x = "Loan Status ", y ="Count")+
   theme_bw()
 
-chargedoff_subset <- subset(clean_loan, clean_loan$loan_status=="Charged Off")
 
-
-ggplot(chargedoff_subset,aes(x=chargedoff_subset$grade,fill=grade))+
-  geom_bar()+
-  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
-  guides(fill=guide_legend("Grades")) +
+ggplot(clean_loan,aes(x=clean_loan$grade,fill=loan_status))+
+ 
   labs(x = "Loan Grade", y ="Count") +
   theme_bw()
 
-ggplot(chargedoff_subset,aes(x=chargedoff_subset$sub_grade,fill=sub_grade))+
+ggplot(clean_loan,aes(x=clean_loan$sub_grade,fill=loan_status))+
   geom_bar()+
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
-  guides(fill=guide_legend("Sub Grades")) +
+  guides(fill=guide_legend("Loan Status")) +
   labs(x = "Loan Sub-Grades", y ="Count")
   theme_bw()
 
-ggplot(chargedoff_subset,aes(x=chargedoff_subset$home_ownership,fill=home_ownership))+
+ggplot(clean_loan,aes(x=clean_loan$home_ownership,fill=loan_status))+
   geom_bar()+
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
-  guides(fill=guide_legend("Home Ownership")) +
+  guides(fill=guide_legend("Loan Status")) +
   labs(x = "Home Ownership", y ="Count") +
   theme_bw()
 
-ggplot(chargedoff_subset,aes(x=chargedoff_subset$verification_status,fill=verification_status))+
+ggplot(clean_loan,aes(x=clean_loan$verification_status,fill=loan_status))+
   geom_bar()+
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
-  guides(fill=guide_legend("Verification Status")) +
+  guides(fill=guide_legend("Loan Status")) +
   labs(x = "Verification Status", y ="Count") +
   theme_bw()
 
-ggplot(chargedoff_subset,aes(x=chargedoff_subset$purpose,fill=purpose))+
+ggplot(clean_loan,aes(x=clean_loan$purpose,fill=loan_status))+
   geom_bar() +
   coord_flip()+
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
-  guides(fill=guide_legend("Purpose")) +
+  guides(fill=guide_legend("Loan Status")) +
   labs(x = "Loan Purpose", y ="Count") +
   theme_bw()
 
-ggplot(chargedoff_subset,aes(x=chargedoff_subset$term,fill=term))+
+ggplot(clean_loan,aes(x=clean_loan$term,fill=loan_status))+
   geom_bar()+
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
-  guides(fill=guide_legend("Term")) +
+  guides(fill=guide_legend("Loan Status")) +
   labs(x = "Loan Term", y ="Count") +
   theme_bw()
 
-ggplot(chargedoff_subset,aes(x=chargedoff_subset$emp_length))+
+ggplot(clean_loan,aes(x=clean_loan$emp_length,fill=loan_status))+
   geom_bar() +
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5)) +
   labs(x = "Employement Length", y ="Count") +
+  guides(fill=guide_legend("Loan Status")) +
   theme_bw()
 
 #Annual income and dti are the main driving factor
-ggplot(chargedoff_subset,aes(x=chargedoff_subset$annual_inc))+
+ggplot(clean_loan,aes(x=clean_loan$annual_inc,fill=loan_status))+
   geom_histogram(bins=100) +
   labs(x = "Annual Income", y ="Count") +
   theme_bw()
 
-ggplot(chargedoff_subset,aes(x=chargedoff_subset$dti))+
+ggplot(clean_loan,aes(x=clean_loan$dti,fill=loan_status))+
   geom_histogram() +
   labs(x = "DTI", y ="Count") +
   theme_bw()
 
-ggplot(chargedoff_subset,aes(x=chargedoff_subset$int_rate_perc))+
+ggplot(clean_loan,aes(x=clean_loan$int_rate_perc,fill=loan_status))+
   geom_histogram() +
   labs(x = "Interest Rate", y ="Count") +
   theme_bw()
@@ -215,11 +212,6 @@ ggplot(clean_loan,aes(x=clean_loan$annual_inc))+
   geom_histogram()
 
 #Box plots on measure variables
-
-ggplot(chargedoff_subset,aes(x=as.factor(chargedoff_subset$int_rate) , y = chargedoff_subset$annual_inc))+
-  geom_boxplot() +
-  labs(x = "Interest Rate", y ="Annual Income") +
-  theme_bw()
 
 
 # Correlation matrix
