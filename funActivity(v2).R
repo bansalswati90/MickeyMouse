@@ -332,16 +332,66 @@ ggplot(clean_loan,aes(x=clean_loan$sub_grade,fill=loan_status))+
   ggtitle("Frequency of Loan Sub-Grades") +
   theme_gdocs()
 
-ggplot(clean_loan,aes(x=clean_loan$home_ownership,fill=loan_status))+
-  geom_bar()+
-  guides(fill=guide_legend("Loan Status")) +
-  labs(x = "Home Ownership", y ="Count") +
-  ggtitle("Frequency of Home Ownership") +
+# Loan taken by different sections of the Home Owners
+
+sumAmnts(clean_loan, home_ownership)
+
+sumAmnts(clean_loan, home_ownership, loan_status) %>% 
+  ggplot(aes(x = home_ownership, y = total_issued, fill = loan_status)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Home Ownership", y ="Total Loan Issued") +
+  ggtitle("Loan Issued grouped by Home Ownership") +
   theme_gdocs()
+
+
+# Loan taken for different Purpose
+
+sumAmnts(clean_loan, purpose)
+
+sumAmnts(clean_loan, purpose) %>%
+  ggplot(aes(x = purpose, y = total_issued)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(x = "Purpose", y ="Total Loan Issued") +
+  ggtitle("Loan Issued for What Purpose") +
+  theme_gdocs()
+
+
+# Revolving Balance
+
+sumAmnts(clean_loan, revol_bal_bucket)
+
+sumAmnts(clean_loan, revol_bal_bucket) %>%
+  ggplot(aes(x = revol_bal_bucket, y = total_issued)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(x = "Revolving Balance", y ="Total Loan Issued") +
+  ggtitle("Loan Issued for What Purpose") +
+  theme_gdocs()
+
+# Employment Length
+sumAmnts(clean_loan, emp_length)
+
+
+# Delinquency Bucket
+sumAmnts(clean_loan, delinq_2yrs)
+
+
+# Debt-to-Income Ratio
+sumAmnts(clean_loan, dti_bucket)
+
+clean_loan %>%
+  ggplot(aes(grade, dti, color = grade)) +
+  geom_boxplot() +
+  theme_gdocs() +
+  xlab("Loan Grades ranging from A to G") +
+  ylab("DTI (Debt to Income Ratio (%)") +
+  ggtitle("DTI Distribution vs. Loan Grades")
+
+
 
 ggplot(clean_loan,aes(x=clean_loan$verification_status,fill=loan_status))+
   geom_bar()+
-  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
   guides(fill=guide_legend("Loan Status")) +
   labs(x = "Verification Status", y ="Count") +
   ggtitle("Frequency of Verification Status") +
