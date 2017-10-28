@@ -113,12 +113,6 @@ states_code <- as.data.frame(state.abb, state.name)  %>% add_rownames("State") %
 names(states_code) <- c('State', 'State_abrv')
 states_code$State_abrv <- as.character(states_code$State_abrv)
 
-# The dataset do not have State Code for North Dakota. Instead it has an extra DC Code
-# This is not 'Washington DC' as the code for Washington DC is 'WA'
-# Hence, making 'north dakota' as DC for easy joining.
-states_code$State_abrv[states_code$State == "north dakota"] <- 'DC'
-
-
 clean_loan <- merge(clean_loan, states_code, by.x = 'addr_state', by.y = 'State_abrv', all.x = TRUE)
 
 
@@ -139,6 +133,8 @@ map <- ggplot(clean_loan, aes(map_id = State)) +
 map + geom_map(aes(fill = loan_amnt), map = states_map) +
   guides(fill=guide_legend(title="Loan Amount")) +
   labs(title = "Loan Spread")
+# North Dakota (ND) is missing from the dataset.
+
 
 ggplot(clean_loan,aes(x=clean_loan$loan_status,fill=loan_status))+
   geom_bar()+
