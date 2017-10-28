@@ -313,20 +313,20 @@ p2 <- sumAmnts(clean_loan, issue_year, issue_d) %>%
 grid.arrange(p1, p2, nrow = 2)
 
 
+# Looking at Grade Statistics
+sumAmnts(clean_loan, grade)
 
-
-
+# Distribution of Loans accross the different Loan Grades
 ggplot(clean_loan,aes(x=clean_loan$grade,fill=loan_status))+
   geom_bar()+
-  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
   guides(fill=guide_legend("Loan Status")) +
   labs(x = "Loan Grade", y ="Count") +
   ggtitle("Frequency of Loan Grades") +
   theme_gdocs()
 
+# Distribution of Loans accross different Loan Sub-Grades
 ggplot(clean_loan,aes(x=clean_loan$sub_grade,fill=loan_status))+
   geom_bar()+
-  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
   guides(fill=guide_legend("Loan Status")) +
   labs(x = "Loan Sub-Grades", y ="Count") +
   ggtitle("Frequency of Loan Sub-Grades") +
@@ -334,7 +334,6 @@ ggplot(clean_loan,aes(x=clean_loan$sub_grade,fill=loan_status))+
 
 ggplot(clean_loan,aes(x=clean_loan$home_ownership,fill=loan_status))+
   geom_bar()+
-  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
   guides(fill=guide_legend("Loan Status")) +
   labs(x = "Home Ownership", y ="Count") +
   ggtitle("Frequency of Home Ownership") +
