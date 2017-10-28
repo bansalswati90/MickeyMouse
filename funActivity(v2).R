@@ -145,7 +145,9 @@ ggplot(clean_loan,aes(x=clean_loan$loan_status,fill=loan_status))+
 
 
 ggplot(clean_loan,aes(x=clean_loan$grade,fill=loan_status))+
- 
+  geom_bar()+
+  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
+  guides(fill=guide_legend("Loan Status")) +
   labs(x = "Loan Grade", y ="Count") +
   theme_bw()
 
