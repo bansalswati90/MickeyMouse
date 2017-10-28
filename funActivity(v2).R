@@ -41,7 +41,7 @@ sumAmnts <- function(x, ...) {
   x %>% 
     group_by(., ...) %>%
     summarise(total_issued = round(sum(loan_amnt)),
-              n = prettyNum(round(n()), big.mark = ","))
+              n = n())
 }
 
 # Create summary by grouping ... and showing useful stats about the group
@@ -147,16 +147,45 @@ clean_loan$issue_month <- format(clean_loan$issue_d, "%b")
 sumAmnts(clean_loan, issue_year)
 sumAmnts(clean_loan, issue_month) %>% arrange(desc(total_issued))
 
-# Creating buckets for 2 year delinquency
-mutate(clean_loan, delinq_bucket = ifelse(delinq_2yrs >= 2, "2+", delinq_2yrs))
-
-# Creating buckets for inq_bucket
-
-# Creating buckets for rec_bucket
 
 # Creating buckets for Income Buckets
+grp <- quantile(clean_loan$annual_inc, seq(0,1,0.1))
+labels <- c(0, round(grp[2:10],0), "+inf")
+labels <- paste(labels[1:10], labels[2:11], sep = "-")
+clean_loan <- clean_loan %>% 
+  mutate(annual_inc_bucket = cut(clean_loan$annual_inc, breaks = grp, labels = factor(labels), include.lowest=TRUE))
+
+
+# Creating buckets for Debt-to-Income ratio
+grp <- quantile(clean_loan$dti, seq(0,1,0.1))
+labels <- c(0, round(grp[2:10],0), "+inf")
+labels <-  paste(labels[1:10], labels[2:11], sep = "-")
+clean_loan <- clean_loan %>% 
+  mutate(dti_bucket = cut(clean_loan$dti, breaks = grp, labels = factor(labels), include.lowest=TRUE))
+
+
+# Creating buckets for 2 year delinquency
+clean_loan$delinq_2yrs <- as.numeric(clean_loan$delinq_2yrs)
+clean_loan <- clean_loan %>% 
+  mutate(delinq_bucket = ifelse(delinq_2yrs >= 2, "2+", delinq_2yrs))
+
+
+# Creating buckets for inq_bucket
+clean_loan$inq_last_6mths <- as.numeric(clean_loan$inq_last_6mths)
+clean_loan <- clean_loan %>%
+  mutate(
+    inq_bucket = ifelse(inq_last_6mths >= 7,"7+",
+                 ifelse(inq_last_6mths >= 5,"5-6",
+                 ifelse(inq_last_6mths >= 3, "3-4",
+                 ifelse(inq_last_6mths >= 1, "1-2", 0)))))
+
 
 # Creating buckets for Revolving Buckets
+clean_loan = mutate(clean_loan, revol = as.numeric(gsub("%","",revol_util)))
+grp <- quantile(clean_loan$revol_util_perc, seq(0,1,0.1))
+labels <- c(0, round(grp[2:10], 0), "+inf")
+labels <- paste(labels[1:10], labels[2:11], sep = "-")
+clean_loan <- mutate(clean_loan, revol_bucket = cut(clean_loan$revol_util_perc, breaks = grp, labels = factor(labels), include.lowest=TRUE))
 
 # Creating buckets for Revolving Balance Buckets
 
