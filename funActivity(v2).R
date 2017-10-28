@@ -4,7 +4,6 @@ library(maps)
 library(reshape2)
 library(corrplot)
 library(stringr)
-library(janitor)
 
 #####################################################################################
 ### LOADING DATA
