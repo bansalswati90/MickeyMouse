@@ -43,11 +43,11 @@ customformatdate <- function(x) {
   x <- as.Date(x, format = "%d-%b-%y")
 }
 
-# Create summary by grouping ... and showing Total Loan Amount and Number of Loans
+# Create summary by grouping ... and showing Funded Amount and Number of Loans
 sumAmnts <- function(x, ...) {
   x %>% 
     group_by(., ...) %>%
-    summarise(total_issued = round(sum(loan_amnt)),
+    summarise(total_issued = round(sum(funded_amnt)),
               n = n())
 }
 
@@ -55,9 +55,9 @@ sumAmnts <- function(x, ...) {
 sumStats <- function(x, ...) {
   x %>% 
     group_by(., ...) %>%
-    summarise(median = round(median(loan_amnt)),
-              average = round(mean(loan_amnt)),
-              stdev = round(sd(loan_amnt)))
+    summarise(median = round(median(funded_amnt)),
+              average = round(mean(funded_amnt)),
+              stdev = round(sd(funded_amnt)))
 }
 
 
@@ -169,14 +169,13 @@ clean_loan <- clean_loan %>%
                                  include.lowest=TRUE))
 
 # Creating buckets for Debt-to-Income ratio
-grp <- quantile(clean_loan$dti, seq(0,1,0.1))
-labels <- c(0, round(grp[2:10],0), "+inf")
-labels <- paste(labels[1:10], labels[2:11], sep = "-")
-clean_loan <- clean_loan %>% 
-  mutate(dti_bucket = cut(clean_loan$dti, 
-                          breaks = grp, 
-                          labels = factor(labels), 
-                          include.lowest=TRUE))
+clean_loan <- clean_loan %>%
+  mutate(
+    dti_bucket = ifelse(dti < 8,"< 8",
+                             ifelse((dti >= 8 & int_rate_perc < 12),"8-12",
+                                    ifelse((dti >= 12 & int_rate_perc < 18),"12-18",
+                                           ifelse((int_rate_perc >= 18 & int_rate_perc < 24),"18-24",
+                                                  ifelse(int_rate_perc >= 24, "> 24","0"))))))
 
 
 # Creating buckets for 2 year delinquency
@@ -214,6 +213,18 @@ clean_loan <- clean_loan %>%
                                 breaks = grp, 
                                 labels = factor(labels), 
                                 include.lowest=TRUE))
+
+# Creating buckets for int_rate_perc
+clean_loan <- clean_loan %>%
+  mutate(
+    int_rate_bucket = ifelse(int_rate_perc < 8,"< 8",
+                        ifelse((int_rate_perc >= 8 & int_rate_perc < 11),"8-11",
+                               ifelse((int_rate_perc >= 11 & int_rate_perc < 14),"11-14",
+                                      ifelse((int_rate_perc >= 14 & int_rate_perc < 17),"14-17",
+                                      ifelse(int_rate_perc >= 17, "> 17","0"))))))
+
+#Calculating the credit loss as funded_amt-total_rec_prncp
+clean_loan$credit_loss <- clean_loan$funded_amnt - clean_loan$total_rec_prncp
 
 
 ####################################################################################
@@ -370,6 +381,14 @@ sumAmnts(clean_loan, revol_bal_bucket) %>%
 
 # Employment Length
 sumAmnts(clean_loan, emp_length)
+
+sumAmnts(clean_loan, emp_length) %>%
+  ggplot(aes(x = emp_length, y = total_issued)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = total_issued),position = position_stack(vjust=0.5)) +
+  labs(x = "Employment Length", y ="Total Loan Issued") +
+  ggtitle("Employment Length of people taing loans") +
+  theme_gdocs()
 
 
 # Delinquency Bucket
@@ -544,4 +563,51 @@ ggplot(clean_loan %>%
   geom_line() + 
   labs(x="Date issued")+
   ggtitle("DTI by Date issued")+
+  theme_gdocs()
+
+############################################GRAPHS WITH CREDIT LOSS
+ggplot(clean_loan %>% 
+         select(int_rate_bucket, credit_loss) %>% 
+         group_by(int_rate_bucket) %>% 
+         summarise(CreditLoss = sum(credit_loss)),aes(x = int_rate_bucket, y = CreditLoss))+
+  geom_bar(stat="identity") + 
+  labs(x="Interest Rate",y="Credit Loss")+
+  ggtitle("Credit Loss for interest Rate")+
+  theme_gdocs()
+
+ggplot(clean_loan %>% 
+         select(dti_bucket, credit_loss) %>% 
+         group_by(dti_bucket) %>% 
+         summarise(CreditLoss = sum(credit_loss)),aes(x = dti_bucket, y = CreditLoss))+
+  geom_bar(stat="identity") + 
+  labs(x="DTI",y="Credit Loss")+
+  ggtitle("Credit Loss for DTI")+
+  theme_gdocs()
+
+ggplot(clean_loan %>% 
+         select(annual_inc_bucket, credit_loss) %>% 
+         group_by(annual_inc_bucket) %>% 
+         summarise(CreditLoss = sum(credit_loss)),aes(x = annual_inc_bucket, y = CreditLoss))+
+  geom_bar(stat="identity") + 
+  labs(x="Annual Income",y="Credit Loss")+
+  ggtitle("Credit Loss for Annual Income")+
+  theme_gdocs()
+
+
+ggplot(clean_loan %>% 
+         select(term, credit_loss) %>% 
+         group_by(term) %>% 
+         summarise(CreditLoss = sum(credit_loss)),aes(x = term, y = CreditLoss))+
+  geom_bar(stat="identity") + 
+  labs(x="Term",y="Credit Loss")+
+  ggtitle("Credit Loss for Term")+
+  theme_gdocs()
+
+ggplot(clean_loan %>% 
+         select(home_ownership, credit_loss) %>% 
+         group_by(home_ownership) %>% 
+         summarise(CreditLoss = sum(credit_loss)),aes(x = home_ownership, y = CreditLoss))+
+  geom_bar(stat="identity") + 
+  labs(x="home_ownership",y="Credit Loss")+
+  ggtitle("Credit Loss for home_ownership")+
   theme_gdocs()
