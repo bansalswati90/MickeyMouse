@@ -382,6 +382,22 @@ p_dti <-
 p_dti
 
 
+#########################################################################################
+####OUTLIER TREATMENT####
+
+# Annual Income
+CheckOutlierExist(loan,annual_inc) #function call
+summary(loan$annual_inc)
+hist(loan$annual_inc)
+
+outlier_range<-1.5*IQR(loan$annual_inc)
+upper_whisker=unname(quantile(loan$annual_inc,0.75))+outlier_range
+lower_whisker=unname(quantile(loan$annual_inc,0.25))-outlier_range
+loan <- loan[which((loan$annual_inc>=upper_whisker | loan$annual_inc<=lower_whisker)==FALSE),]
+
+summary(loan$annual_inc)
+hist(loan$annual_inc)
+
 
 #########################################################################################
 ####SEGMENTED ANALYSIS####
@@ -480,6 +496,7 @@ p_yearwise <- sumAmnts(loan, issue_year) %>%
   geom_bar(stat = "identity") +
   labs(x = "Year", y ="Total Loan Issued") +
   ggtitle("Loan Issued Grouped by Year") +
+  guides(fill=guide_legend("Year")) +
   theme_gdocs()
 
 p_monthyear <- sumAmnts(loan, issue_year, issue_d) %>%
@@ -488,6 +505,7 @@ p_monthyear <- sumAmnts(loan, issue_year, issue_d) %>%
   labs(x = "Month-Year", y ="Total Loan Issued") +
   ggtitle("Loan Issued Grouped by Month-Year") +
   guides(fill=guide_legend("Issue Year")) +
+  guides(fill=guide_legend("Month Year")) +
   theme_gdocs()
 
 grid.arrange(p_yearwise, p_monthyear, nrow = 2)
