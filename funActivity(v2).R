@@ -211,7 +211,10 @@ loan <- loan %>%
 loan$int_rate_bucket <- factor(loan$int_rate_bucket, 
                                levels = c("0","< 8", "8-11", "11-14", "14-17", "> 17"),ordered=TRUE)
 
-
+#Creating buckets for funded amount
+grp <- seq(0,35000, 5000)
+labels <- paste(grp[1:7], grp[2:8], sep = ' - ')
+loan <- mutate(loan, funded_amnt_bucket = cut(loan$funded_amnt, breaks = grp, labels = factor(labels), include.lowest = TRUE))
 
 
 ####################################################################################
@@ -468,36 +471,82 @@ p_dti
 #########################################################################################
 #####BIVARIATE ANALYSIS PLOTS####
 
+#Interst Rate vs Credit Loss
+#Bargraph
 p_interest_creditloss <- 
-  ggplot(loan %>% 
+          ggplot(loan %>% 
          select(int_rate_bucket, credit_loss) %>% 
          group_by(int_rate_bucket) %>% 
          summarise(CreditLoss = sum(credit_loss)),aes(x = int_rate_bucket, y = CreditLoss, fill = "red"))+
-  geom_bar(stat="identity") + 
+        geom_bar(stat="identity") + 
   labs(x="Interest Rate",y="Credit Loss")+
-  ggtitle("Credit Loss for interest Rate")+
+  ggtitle("Interst Rate vs Credit Loss")+
   guides(fill=FALSE) +
   theme_gdocs()
-p_interest_creditloss
 
-ggplot(loan %>% 
+#Scatterplot
+p_interest_creditloss_line <- 
+  ggplot(loan,
+aes(x = int_rate_perc, y = credit_loss))+
+  geom_point(alpha=0.1, size=3) + geom_smooth()+
+  labs(x="Interest Rate",y="Credit Loss")+
+  ggtitle("Interst Rate vs Credit Loss")+
+  guides(fill=FALSE) +
+  theme_gdocs()
+
+grid.arrange(p_interest_creditloss,p_interest_creditloss_line,ncol=2)
+
+
+#Funded Amount vs Credit Loss
+#Bargraph
+p_fundamt_creditloss <- 
+  ggplot(loan %>% 
+           select(funded_amnt_bucket, credit_loss) %>% 
+           group_by(funded_amnt_bucket) %>% 
+           summarise(CreditLoss = sum(credit_loss)),aes(x = funded_amnt_bucket, y = CreditLoss, fill = "red"))+
+  geom_bar(stat="identity") + 
+  labs(x="Funded Amount",y="Credit Loss")+
+  ggtitle("Funded Amount vs Credit Loss")+
+  guides(fill=FALSE) +
+  theme_gdocs()
+
+#Scatterplot
+p_fundamt_creditloss_line <- 
+  ggplot(loan,
+         aes(x = funded_amnt, y = credit_loss))+
+  geom_point(alpha=0.1, size=3) + geom_smooth()+
+  labs(x="Funded Amount vs Credit Loss")+
+  guides(fill=FALSE) +
+  theme_gdocs()
+
+grid.arrange(p_fundamt_creditloss,p_fundamt_creditloss_line,ncol=2)
+
+#Debt To Income Ratio vs Credit Loss
+p_dti_creditloss <-
+  ggplot(loan %>% 
          select(dti_bucket, credit_loss) %>% 
          group_by(dti_bucket) %>% 
          summarise(CreditLoss = sum(credit_loss)),aes(x = dti_bucket, y = CreditLoss, fill = "red"))+
   geom_bar(stat="identity") + 
-  labs(x="DTI",y="Credit Loss")+
-  ggtitle("Credit Loss for DTI")+
+  labs(x="Debt To Income",y="Credit Loss")+
+  ggtitle("Debt To Income Ratio vs Credit Loss")+
+  guides(fill=FALSE) + 
   theme_gdocs()
+p_dti_creditloss
 
-ggplot(loan %>% 
+#Annual Income vs Credit Loss
+p_annualincome_creditloss <-
+  ggplot(loan %>% 
          select(annual_inc_bucket, credit_loss) %>% 
          group_by(annual_inc_bucket) %>% 
          summarise(CreditLoss = sum(credit_loss)),aes(x = annual_inc_bucket, y = CreditLoss, fill = "red"))+
   geom_bar(stat="identity") + 
-  labs(x="Annual Income",y="Credit Loss")+
-  ggtitle("Credit Loss for Annual Income")+
+  labs(x="Annual Income",y="Credit Loss") +
+  ggtitle("Annual Income vs Credit Loss") +
+  guides(fill=FALSE) +
   theme_gdocs()
 
+p_annualincome_creditloss
 
 ggplot(loan %>% 
          select(term, credit_loss) %>% 
