@@ -503,7 +503,7 @@ grid.arrange(p_interest_creditloss,p_interest_creditloss_line,ncol=2)
 #Funded Amount vs Credit Loss
 #Bargraph
 p_fundamt_creditloss <- 
-  ggplot(loan %>% 
+  ggplot(loan_chargedoff %>% 
            select(funded_amnt_bucket, credit_loss) %>% 
            group_by(funded_amnt_bucket) %>% 
            summarise(CreditLoss = sum(credit_loss)),aes(x = funded_amnt_bucket, y = CreditLoss, fill = "red"))+
@@ -516,7 +516,7 @@ p_fundamt_creditloss <-
 
 #Scatterplot
 p_fundamt_creditloss_line <- 
-  ggplot(loan,
+  ggplot(loan_chargedoff,
          aes(x = funded_amnt, y = credit_loss))+
   geom_point(alpha=0.1, size=3) + geom_smooth()+
   labs(x="Funded Amount vs Credit Loss")+
@@ -527,7 +527,7 @@ grid.arrange(p_fundamt_creditloss,p_fundamt_creditloss_line,ncol=2)
 
 #Debt To Income Ratio vs Credit Loss
 p_dti_creditloss <-
-  ggplot(loan %>% 
+  ggplot(loan_chargedoff %>% 
          select(dti_bucket, credit_loss) %>% 
          group_by(dti_bucket) %>% 
          summarise(CreditLoss = sum(credit_loss)),aes(x = dti_bucket, y = CreditLoss, fill = "red"))+
@@ -536,11 +536,12 @@ p_dti_creditloss <-
   ggtitle("Debt To Income Ratio vs Credit Loss")+
   guides(fill=FALSE) + 
   theme_gdocs()
+
 p_dti_creditloss
 
 #Annual Income vs Credit Loss
 p_annualincome_creditloss <-
-  ggplot(loan %>% 
+  ggplot(loan_chargedoff %>% 
          select(annual_inc_bucket, credit_loss) %>% 
          group_by(annual_inc_bucket) %>% 
          summarise(CreditLoss = sum(credit_loss)),aes(x = annual_inc_bucket, y = CreditLoss, fill = "red"))+
@@ -552,25 +553,33 @@ p_annualincome_creditloss <-
 
 p_annualincome_creditloss
 
-ggplot(loan %>% 
+#Term vs Credit Loss
+p_term_creditloss <-
+  ggplot(loan_chargedoff %>% 
          select(term, credit_loss) %>% 
          group_by(term) %>% 
          summarise(CreditLoss = sum(credit_loss)),aes(x = term, y = CreditLoss, fill = "red"))+
   geom_bar(stat="identity") + 
-  labs(x="Term",y="Credit Loss")+
-  ggtitle("Credit Loss for Term")+
+  labs(x="Term",y="Credit Loss") +
+  ggtitle("Credit Loss for Term") +
+  guides(fill=FALSE) +
   theme_gdocs()
 
-ggplot(loan %>% 
+p_term_creditloss
+
+#Home ownership vs Credit Loss
+p_homeownership_creditloss <- 
+  ggplot(loan_chargedoff %>% 
          select(home_ownership, credit_loss) %>% 
          group_by(home_ownership) %>% 
          summarise(CreditLoss = sum(credit_loss)),aes(x = home_ownership, y = CreditLoss, fill = "red"))+
   geom_bar(stat="identity") + 
-  labs(x="home_ownership",y="Credit Loss")+
-  ggtitle("Credit Loss for home_ownership")+
+  labs(x="home_ownership",y="Credit Loss") +
+  ggtitle("Credit Loss for home_ownership") +
+  guides(fill=FALSE) +
   theme_gdocs()
 
-
+p_homeownership_creditloss
 
 ####################################################################################
 ### Plotting Map Visualization for US States 
