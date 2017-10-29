@@ -65,16 +65,16 @@ sumStats <- function(x, ...) {
 ### CLEANING DATA
 
 # Removing columns with only NA values and other columns with single values or no variance
-clean_loan <- loan[sapply(loan, function(x) length(unique(na.omit(x)))>1)]
-ncol(loan) - ncol(clean_loan)
+loan <- loan[sapply(loan, function(x) length(unique(na.omit(x)))>1)]
+ncol(raw.loan) - ncol(loan)
 # Total 63 columns removed
 
 # Since all loans are individual loans we can remove columns like id, member_id, zipcode etc
-clean_loan <- subset(clean_loan, select = -c(id,member_id,url,desc,title,zip_code))
+loan <- subset(loan, select = -c(id,member_id,url,desc,title,zip_code))
 
 
 #Changing Column formatting
-clean_loan <- clean_loan %>% mutate(
+loan <- loan %>% mutate(
 
     #Changing percentage fields to numbers
   int_rate_perc = as.numeric(gsub("%", "", int_rate)),
@@ -88,7 +88,7 @@ clean_loan <- clean_loan %>% mutate(
   last_credit_pull_d = customformatdate(last_credit_pull_d)
 )
 
-summary(clean_loan)
+summary(loan)
 
 
 #####################################################################################
@@ -96,34 +96,34 @@ summary(clean_loan)
 
 #Checking the amounts 
 #loan_amnt, funded_amnt, funded_amnt_inv, installment, annual_inc
-summary(clean_loan[,c(1,2,3,6, 12)])
+summary(loan[,c(1,2,3,6, 12)])
 
 
-table(clean_loan$term)
+table(loan$term)
 # 2 terms - 36 months and 60 months
 
-table(clean_loan$grade)
+table(loan$grade)
 #Ranges from A to G
 
-table(clean_loan$sub_grade)
+table(loan$sub_grade)
 #Ranges from 5 sub grades for each grades - ranging from 1 to 5
 
-table(clean_loan$home_ownership)
+table(loan$home_ownership)
 # MORTGAGE - 17659; RENT - 18899; OWN - 3058
 # NONE - 3; OTHER - 98
 # The count of NONE is really low and this will not provide any concrete results
 # Merging NONE with OTHER
 
-clean_loan$home_ownership <- gsub("NONE", "OTHER", clean_loan$home_ownership)
-table(clean_loan$home_ownership)
+loan$home_ownership <- gsub("NONE", "OTHER", loan$home_ownership)
+table(loan$home_ownership)
 # 4 levels - Mortgage, Own, Rent, Other
 
 # Most popular category provided by borrower for loan request.
-sumAmnts(clean_loan, purpose) %>% 
+sumAmnts(loan, purpose) %>% 
   arrange(desc(total_issued))
 
 # States with majority of Loans 
-sumAmnts(clean_loan, addr_state) %>% 
+sumAmnts(loan, addr_state) %>% 
   arrange(desc(total_issued))
 
 
@@ -131,13 +131,16 @@ sumAmnts(clean_loan, addr_state) %>%
 ###Deriving columns
 
 # Extracting Year from Loan Issued Date
-clean_loan$issue_year <- format(clean_loan$issue_d, "%Y")
+loan$issue_year <- format(loan$issue_d, "%Y")
+sumAmnts(loan, issue_year)
 
-sumAmnts(clean_loan, issue_year)
+#converting the Employment Length field into ordered factor
 
+loan$emp_length <- factor(loan$emp_length, 
+                          levels = c("< 1 year","1 year", "2 years", "3 years","4 years", "5 years", "6 years","7 years","8 years","9 years","10+ years"))
 
 # Creating buckets for Income Buckets
-clean_loan <- clean_loan %>%
+loan <- loan %>%
   mutate(
     annual_inc_bucket = ifelse(annual_inc < 35000,"< 35000",
                         ifelse((annual_inc >= 35000 & annual_inc < 55000),"35000-55000",
@@ -145,9 +148,12 @@ clean_loan <- clean_loan %>%
                         ifelse((annual_inc >= 75000 & annual_inc < 95000),"75000-95000",
                         ifelse((annual_inc >= 95000 & annual_inc < 115000),"95000-115000",
                         ifelse((annual_inc >= 115000 & annual_inc < 135000),"115000-135000","> 135000")))))))
+loan$annual_inc_bucket <- factor(loan$annual_inc_bucket,
+                                 levels=c("< 35000","35000-55000","55000-75000","75000-95000","95000-115000","115000-135000","> 135000"),ordered=TRUE)
+
 
 # Creating buckets for Debt-to-Income ratio
-clean_loan <- clean_loan %>%
+loan <- loan %>%
   mutate(
     dti_bucket = ifelse(dti < 8,"< 8",
                         ifelse((dti >= 8 & int_rate_perc < 12),"8-12",
@@ -157,14 +163,14 @@ clean_loan <- clean_loan %>%
 
 
 # Creating buckets for 2 year delinquency
-clean_loan$delinq_2yrs <- as.numeric(clean_loan$delinq_2yrs)
-clean_loan <- clean_loan %>% 
+loan$delinq_2yrs <- as.numeric(loan$delinq_2yrs)
+loan <- loan %>% 
   mutate(delinq_bucket = ifelse(delinq_2yrs >= 2, "2+", delinq_2yrs))
 
 
 # Creating buckets for inq_bucket
-clean_loan$inq_last_6mths <- as.numeric(clean_loan$inq_last_6mths)
-clean_loan <- clean_loan %>%
+loan$inq_last_6mths <- as.numeric(loan$inq_last_6mths)
+loan <- loan %>%
   mutate(
     inq_bucket = ifelse(inq_last_6mths >= 7,"7+",
                  ifelse(inq_last_6mths >= 5,"5-6",
@@ -173,40 +179,73 @@ clean_loan <- clean_loan %>%
 
 
 # Creating buckets for Revolving Buckets
-grp <- quantile(clean_loan$revol_util_perc, seq(0,1,0.1), na.rm = TRUE)
+grp <- quantile(loan$revol_util_perc, seq(0,1,0.1), na.rm = TRUE)
 labels <- c(0, round(grp[2:10], 0), "+inf")
 labels <- paste(labels[1:10], labels[2:11], sep = "-")
-clean_loan <- clean_loan %>% 
-  mutate(revol_bucket = cut(clean_loan$revol_util_perc,
+loan <- loan %>% 
+  mutate(revol_bucket = cut(loan$revol_util_perc,
                             breaks = grp, 
                             labels = factor(labels), 
                             include.lowest=TRUE))
 
 # Creating buckets for Revolving Balance Buckets
-grp <- quantile(clean_loan$revol_bal, seq(0,1,0.1))
+grp <- quantile(loan$revol_bal, seq(0,1,0.1))
 labels <- c(0, round(grp[2:10], 0), "+inf")
 labels <- paste(labels[1:10], labels[2:11], sep = "-")
-clean_loan <- clean_loan %>% 
-  mutate(revol_bal_bucket = cut(clean_loan$revol_bal, 
+loan <- loan %>% 
+  mutate(revol_bal_bucket = cut(loan$revol_bal, 
                                 breaks = grp, 
                                 labels = factor(labels), 
                                 include.lowest=TRUE))
 
 # Creating buckets for int_rate_perc
-clean_loan <- clean_loan %>%
+loan <- loan %>%
   mutate(
     int_rate_bucket = ifelse(int_rate_perc < 8,"< 8",
                         ifelse((int_rate_perc >= 8 & int_rate_perc < 11),"8-11",
                         ifelse((int_rate_perc >= 11 & int_rate_perc < 14),"11-14",
                         ifelse((int_rate_perc >= 14 & int_rate_perc < 17),"14-17",
                         ifelse(int_rate_perc >= 17, "> 17","0"))))))
+loan$int_rate_bucket <- factor(loan$int_rate_bucket, 
+                               levels = c("0","< 8", "8-11", "11-14", "14-17", "> 17"))
 
 #Calculating the credit loss as funded_amt-total_rec_prncp
-clean_loan$credit_loss <- clean_loan$funded_amnt - clean_loan$total_rec_prncp
+loan$credit_loss <- loan$funded_amnt - loan$total_rec_prncp
+
+
+
+
+##ANALYSIS##################################################################################
+
+# Analyzing Loan Amounts with respects to Purpose of the Loan
+sumAmnts(loan, purpose)
+
+p1 <- loan %>%
+  ggplot(aes(x=purpose,fill="red")) +
+  geom_bar() +
+  coord_flip()+
+  guides(fill=guide_legend("Purpose")) +
+  ggtitle("Frequency of Purpose") +
+  labs(x = "Loan Purpose", y ="Count") +
+  theme_gdocs() + 
+  guides(fill=FALSE)
+
+p2 <- sumAmnts(loan, purpose) %>%
+  ggplot(aes(x = purpose, y = total_issued, fill = "red")) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(x = " Loan Purpose", y ="Total Loan Issued") +
+  ggtitle("Purpose vs Total Loan Amount") +
+  theme_gdocs()  + 
+  guides(fill=FALSE)
+
+grid.arrange(p1, p2, nrow = 1)
+
+
 
 
 ####################################################################################
-### PREPPING FOR PLOTTING US MAP USING GGPLOT 
+### Plotting Map Visualization for US States 
 
 #states_map contains every Latitude and Longitude for each US States
 states_map <-map_data("state") 
@@ -216,11 +255,11 @@ states_code <- as.data.frame(state.abb, state.name)  %>% add_rownames("State") %
 names(states_code) <- c('State', 'State_abrv')
 states_code$State_abrv <- as.character(states_code$State_abrv)
 
-clean_loan <- merge(clean_loan, states_code, by.x = 'addr_state', by.y = 'State_abrv', all.x = TRUE)
+loan <- merge(loan, states_code, by.x = 'addr_state', by.y = 'State_abrv', all.x = TRUE)
 
 
 # Basic structure of the US Map
-map <- ggplot(clean_loan, aes(map_id = State)) + 
+map <- ggplot(loan, aes(map_id = State)) + 
   expand_limits(x = states_map$long, y = states_map$lat) +
   theme(legend.position = "bottom",
         axis.ticks = element_blank(), 
@@ -230,11 +269,11 @@ map <- ggplot(clean_loan, aes(map_id = State)) +
   scale_fill_gradient(low="#56B1F7", high="#132B43")
 
 
-####################################################################################
+######PLOT##############################################################################
 ###PLOTS
 
 # Plot showing US States with most Loan
-ggplot(clean_loan, aes(map_id = State)) + 
+ggplot(loan, aes(map_id = State)) + 
   geom_map(aes(fill = loan_amnt), map = states_map) +
   expand_limits(x = states_map$long, y = states_map$lat) +
   theme(legend.position = "bottom",
@@ -252,7 +291,7 @@ ggplot(clean_loan, aes(map_id = State)) +
 
 # Finding States with highest Loan Amount
 
-clean_loan %>% 
+loan %>% 
   group_by(addr_state) %>% 
   summarise(total_loan = sum(loan_amnt)) %>% 
   top_n(10) %>%
@@ -278,16 +317,16 @@ map + geom_map(aes(fill = loan_amnt), map = states_map) +
 
 
 # Loan Amount
-summary(clean_loan$loan_amnt)
+summary(loan$loan_amnt)
 
 # Looking at total Loan Amount per Loan Status
-sumAmnts(clean_loan, loan_status)
+sumAmnts(loan, loan_status)
 
 # Looking at some statistics for each Loan Status
-sumStats(clean_loan, loan_status)
+sumStats(loan, loan_status)
 
 # Bar chart of distribution of Loan Amount accross different Statuses.
-sumAmnts(clean_loan, loan_status) %>%
+sumAmnts(loan, loan_status) %>%
   ggplot(aes(x = loan_status, y = total_issued, fill = loan_status)) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = total_issued), position = position_stack(vjust = .5)) +
@@ -298,17 +337,17 @@ sumAmnts(clean_loan, loan_status) %>%
 
 
 # Statistics for the year of Issuance of Loan
-sumStats(clean_loan, issue_year)
+sumStats(loan, issue_year)
 
 
-p1 <- sumAmnts(clean_loan, issue_year) %>%
+p1 <- sumAmnts(loan, issue_year) %>%
   ggplot(aes(x = issue_year, y = total_issued, fill = issue_year)) +
   geom_bar(stat = "identity") +
   labs(x = "Year", y ="Total Loan Issued") +
   ggtitle("Loan Issued Grouped by Year") +
   theme_gdocs()
 
-p2 <- sumAmnts(clean_loan, issue_year, issue_d) %>%
+p2 <- sumAmnts(loan, issue_year, issue_d) %>%
   ggplot(aes(x = issue_d, y = total_issued, fill = issue_year)) +
   geom_bar(stat = "identity") +
   labs(x = "Month-Year", y ="Total Loan Issued") +
@@ -320,7 +359,7 @@ p2 <- sumAmnts(clean_loan, issue_year, issue_d) %>%
 grid.arrange(p1, p2, nrow = 2)
 
 #Loan of different grades changing over time
-ggplot(clean_loan %>% 
+ggplot(loan %>% 
          select(issue_d, loan_amnt, grade) %>% 
          group_by(issue_d, grade) %>% 
          summarise(Amount = sum(loan_amnt)),aes(x = issue_d, y = Amount))+
@@ -330,10 +369,10 @@ ggplot(clean_loan %>%
   theme_gdocs()
 
 # Looking at Grade Statistics
-sumAmnts(clean_loan, grade)
+sumAmnts(loan, grade)
 
 # Distribution of Loans accross the different Loan Grades
-ggplot(clean_loan,aes(x=clean_loan$grade,fill=loan_status))+
+ggplot(loan,aes(x=loan$grade,fill=loan_status))+
   geom_bar()+
   geom_text(stat = 'count', aes(label = ..count..),position = position_stack(vjust=0.5)) +
   guides(fill=guide_legend("Loan Status")) +
@@ -342,7 +381,7 @@ ggplot(clean_loan,aes(x=clean_loan$grade,fill=loan_status))+
   theme_gdocs()
 
 # Distribution of Loans accross different Loan Sub-Grades
-ggplot(clean_loan,aes(x=clean_loan$sub_grade,fill=loan_status))+
+ggplot(loan,aes(x=loan$sub_grade,fill=loan_status))+
   geom_bar()+
   geom_text(stat = 'count', aes(label = ..count..),position = position_stack(vjust=0.5)) +
   guides(fill=guide_legend("Loan Status")) +
@@ -352,7 +391,7 @@ ggplot(clean_loan,aes(x=clean_loan$sub_grade,fill=loan_status))+
 
 
 #Distribution of loan amounts by status
-ggplot(clean_loan, aes(loan_status, loan_amnt))+
+ggplot(loan, aes(loan_status, loan_amnt))+
   geom_boxplot(aes(fill = loan_status)) +
   labs(x = "Status",y = "Amount") +
   guides(fill=guide_legend("Loan Status")) +
@@ -362,9 +401,9 @@ ggplot(clean_loan, aes(loan_status, loan_amnt))+
 
 # Loan taken by different sections of the Home Owners
 
-sumAmnts(clean_loan, home_ownership)
+sumAmnts(loan, home_ownership)
 
-sumAmnts(clean_loan, home_ownership, loan_status) %>% 
+sumAmnts(loan, home_ownership, loan_status) %>% 
   ggplot(aes(x = home_ownership, y = total_issued, fill = loan_status)) +
   geom_bar(stat = "identity") +
   labs(x = "Home Ownership", y ="Total Loan Issued") +
@@ -373,36 +412,25 @@ sumAmnts(clean_loan, home_ownership, loan_status) %>%
   theme_gdocs()
 
 
-# Loan taken for different Purpose
-
-sumAmnts(clean_loan, purpose)
-
-sumAmnts(clean_loan, purpose) %>%
-  ggplot(aes(x = purpose, y = total_issued, fill = "red")) +
-  geom_bar(stat = "identity") +
-  coord_flip() +
-  labs(x = "Purpose", y ="Total Loan Issued") +
-  ggtitle("Loan Issued for What Purpose") +
-  theme_gdocs()
 
 
 # Revolving Balance
 
-sumAmnts(clean_loan, revol_bal_bucket)
+sumAmnts(loan, revol_bal_bucket)
 
-sumAmnts(clean_loan, revol_bal_bucket) %>%
+sumAmnts(loan, revol_bal_bucket) %>%
   ggplot(aes(x = revol_bal_bucket, y = total_issued, fill = "red")) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = total_issued),position = position_stack(vjust=0.5),colour="white") +
   coord_flip() +
   labs(x = "Revolving Balance", y ="Total Loan Issued") +
-  ggtitle("Loan Issued for What Purpose") +
+  ggtitle("Revoling Balance for What Purpose") +
   theme_gdocs()
 
 # Employment Length
-sumAmnts(clean_loan, emp_length)
+sumAmnts(loan, emp_length)
 
-sumAmnts(clean_loan, emp_length) %>%
+sumAmnts(loan, emp_length) %>%
   ggplot(aes(x = emp_length, y = total_issued, fill = "red")) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = total_issued),position = position_stack(vjust=0.5)) +
@@ -412,13 +440,13 @@ sumAmnts(clean_loan, emp_length) %>%
 
 
 # Delinquency Bucket
-sumAmnts(clean_loan, delinq_2yrs)
+sumAmnts(loan, delinq_2yrs)
 
 
 # Debt-to-Income Ratio
-sumAmnts(clean_loan, dti_bucket)
+sumAmnts(loan, dti_bucket)
 
-clean_loan %>%
+loan %>%
   ggplot(aes(grade, dti, color = grade)) +
   geom_boxplot() +
   theme_gdocs() +
@@ -428,7 +456,7 @@ clean_loan %>%
 
 
 
-ggplot(clean_loan,aes(x=clean_loan$verification_status,fill=loan_status))+
+ggplot(loan,aes(x=loan$verification_status,fill=loan_status))+
   geom_bar()+
   guides(fill=guide_legend("Loan Status")) +
   geom_text(stat = 'count', aes(label = ..count..),position = position_stack(vjust=0.5)) +
@@ -436,7 +464,7 @@ ggplot(clean_loan,aes(x=clean_loan$verification_status,fill=loan_status))+
   ggtitle("Frequency of Verification Status") +
   theme_gdocs()
 
-ggplot(clean_loan,aes(x=clean_loan$purpose,fill=loan_status))+
+ggplot(loan,aes(x=loan$purpose,fill=loan_status))+
   geom_bar() + 
   coord_flip()+
   guides(fill=guide_legend("Loan Status")) +
@@ -444,7 +472,7 @@ ggplot(clean_loan,aes(x=clean_loan$purpose,fill=loan_status))+
   ggtitle("Frequency of Loan Purpose") +
   theme_gdocs()
 
-ggplot(clean_loan,aes(x=clean_loan$term,fill=loan_status))+
+ggplot(loan,aes(x=loan$term,fill=loan_status))+
   geom_bar()+
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
   guides(fill=guide_legend("Loan Status")) +
@@ -452,7 +480,7 @@ ggplot(clean_loan,aes(x=clean_loan$term,fill=loan_status))+
   ggtitle("Frequency of Loan Term") +
   theme_gdocs()
 
-ggplot(clean_loan,aes(x=clean_loan$emp_length,fill=loan_status))+
+ggplot(loan,aes(x=loan$emp_length,fill=loan_status))+
   geom_bar() +
   geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5)) +
   labs(x = "Employement Length", y ="Count") +
@@ -461,7 +489,7 @@ ggplot(clean_loan,aes(x=clean_loan$emp_length,fill=loan_status))+
   theme_gdocs()
 
 
-ggplot(clean_loan,aes(x=clean_loan$int_rate_bucket,fill=loan_status))+
+ggplot(loan,aes(x=loan$int_rate_bucket,fill=loan_status))+
   geom_bar(stat = "count") +
   labs(x = "Interest Rate", y ="Count") +
   ggtitle("Frequency of Interest Rate") +
@@ -473,19 +501,19 @@ ggplot(clean_loan,aes(x=clean_loan$int_rate_bucket,fill=loan_status))+
 
 ## Correlation matrix
 
-clean_loan$term2 <- as.numeric(str_replace(clean_loan$term, "months", ""))
+loan$term2 <- as.numeric(str_replace(loan$term, "months", ""))
 
-clean_loan_measures <- Filter(is.numeric, clean_loan)
+loan_measures <- Filter(is.numeric, loan)
 
-clean_loan_measures_corMat<- as.matrix(cor(clean_loan_measures))
+loan_measures_corMat<- as.matrix(cor(loan_measures))
 
-clean_loan_measures_corMat[lower.tri(clean_loan_measures_corMat)]<-NA
+loan_measures_corMat[lower.tri(loan_measures_corMat)]<-NA
 
-clean_loan_measures_corMat_melted <-melt(clean_loan_measures_corMat)
-clean_loan_measures_corMat_melted <-data.frame(clean_loan_measures_corMat_melted [!is.na(clean_loan_measures_corMat_melted[,3]),]) # get rid of the NA matrix entries
-clean_loan_measures_corMat_melted$value_lab<-sprintf('%.2f',clean_loan_measures_corMat_melted$value)
+loan_measures_corMat_melted <-melt(loan_measures_corMat)
+loan_measures_corMat_melted <-data.frame(loan_measures_corMat_melted [!is.na(loan_measures_corMat_melted[,3]),]) # get rid of the NA matrix entries
+loan_measures_corMat_melted$value_lab<-sprintf('%.2f',loan_measures_corMat_melted$value)
 
-ggplot(clean_loan_measures_corMat_melted, aes(Var2, Var1, fill = value, label=value_lab),color='blue') + 
+ggplot(loan_measures_corMat_melted, aes(Var2, Var1, fill = value, label=value_lab),color='blue') + 
   geom_tile() + 
   geom_text() +
   xlab('')+
@@ -493,9 +521,9 @@ ggplot(clean_loan_measures_corMat_melted, aes(Var2, Var1, fill = value, label=va
   theme_minimal() +
   theme(axis.text.x = element_text(size=10, hjust=-0.08, angle= -35 ))
 
-clean_loan_measures_corMat_melted_2 <- filter(clean_loan_measures_corMat_melted, as.numeric(value_lab) < -0.50 | as.numeric(value_lab) > 0.50)
+loan_measures_corMat_melted_2 <- filter(loan_measures_corMat_melted, as.numeric(value_lab) < -0.50 | as.numeric(value_lab) > 0.50)
 
-ggplot(clean_loan_measures_corMat_melted_2, aes(Var2, Var1, fill = value, label=value_lab),color='blue') + 
+ggplot(loan_measures_corMat_melted_2, aes(Var2, Var1, fill = value, label=value_lab),color='blue') + 
   geom_tile() + 
   geom_text() +
   xlab('')+
@@ -503,18 +531,18 @@ ggplot(clean_loan_measures_corMat_melted_2, aes(Var2, Var1, fill = value, label=
   theme_minimal() + 
   theme(axis.text.x = element_text(size=10, hjust=-0.08, angle= -35 ))
 
-clean_loan_measures_corMat_melted_3 <- filter(clean_loan_measures_corMat_melted_2, Var1 != Var2)
+loan_measures_corMat_melted_3 <- filter(loan_measures_corMat_melted_2, Var1 != Var2)
 
 # Quantitative variables which are co-related
 # 11 in m3
 # 26 in m
-unique(clean_loan_measures_corMat_melted_3$Var1)
+unique(loan_measures_corMat_melted_3$Var1)
 
 #########################################################################################
 ######BIVARIATE ANALYSIS PLOTS
 
 
-ggplot(clean_loan %>% 
+ggplot(loan %>% 
          select(int_rate_bucket, credit_loss) %>% 
          group_by(int_rate_bucket) %>% 
          summarise(CreditLoss = sum(credit_loss)),aes(x = int_rate_bucket, y = CreditLoss, fill = "red"))+
@@ -523,7 +551,7 @@ ggplot(clean_loan %>%
   ggtitle("Credit Loss for interest Rate")+
   theme_gdocs()
 
-ggplot(clean_loan %>% 
+ggplot(loan %>% 
          select(dti_bucket, credit_loss) %>% 
          group_by(dti_bucket) %>% 
          summarise(CreditLoss = sum(credit_loss)),aes(x = dti_bucket, y = CreditLoss, fill = "red"))+
@@ -532,7 +560,7 @@ ggplot(clean_loan %>%
   ggtitle("Credit Loss for DTI")+
   theme_gdocs()
 
-ggplot(clean_loan %>% 
+ggplot(loan %>% 
          select(annual_inc_bucket, credit_loss) %>% 
          group_by(annual_inc_bucket) %>% 
          summarise(CreditLoss = sum(credit_loss)),aes(x = annual_inc_bucket, y = CreditLoss, fill = "red"))+
@@ -542,7 +570,7 @@ ggplot(clean_loan %>%
   theme_gdocs()
 
 
-ggplot(clean_loan %>% 
+ggplot(loan %>% 
          select(term, credit_loss) %>% 
          group_by(term) %>% 
          summarise(CreditLoss = sum(credit_loss)),aes(x = term, y = CreditLoss, fill = "red"))+
@@ -551,7 +579,7 @@ ggplot(clean_loan %>%
   ggtitle("Credit Loss for Term")+
   theme_gdocs()
 
-ggplot(clean_loan %>% 
+ggplot(loan %>% 
          select(home_ownership, credit_loss) %>% 
          group_by(home_ownership) %>% 
          summarise(CreditLoss = sum(credit_loss)),aes(x = home_ownership, y = CreditLoss, fill = "red"))+
