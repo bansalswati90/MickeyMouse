@@ -471,20 +471,14 @@ ggplot(clean_loan,aes(x=clean_loan$int_rate_bucket,fill=loan_status))+
 #Box plots on measure variables
 
 
-# Correlation matrix
+## Correlation matrix
 
 clean_loan$term2 <- as.numeric(str_replace(clean_loan$term, "months", ""))
-#clean_loan2 <- Filter(var, clean_loan)
-clean_loan_measures <- Filter(is.numeric, clean_loan)
-#clean_loan_measures <- sapply(clean_loan, is.numeric) Filter(checkUniqueVals, clean_loan_measures)
-#clean_loan_measures <- Filter(var, clean_loan_measures)
-#chart.Correlation(clean_loan_measures, histogram=TRUE, pch=19)
 
-## Correlation Matrix
+clean_loan_measures <- Filter(is.numeric, clean_loan)
 
 clean_loan_measures_corMat<- as.matrix(cor(clean_loan_measures))
 
-corrplot(clean_loan_measures_corMat, method='circle')
 clean_loan_measures_corMat[lower.tri(clean_loan_measures_corMat)]<-NA
 
 clean_loan_measures_corMat_melted <-melt(clean_loan_measures_corMat)
@@ -498,8 +492,6 @@ ggplot(clean_loan_measures_corMat_melted, aes(Var2, Var1, fill = value, label=va
   ylab('')+
   theme_minimal() +
   theme(axis.text.x = element_text(size=10, hjust=-0.08, angle= -35 ))
-
-
 
 clean_loan_measures_corMat_melted_2 <- filter(clean_loan_measures_corMat_melted, as.numeric(value_lab) < -0.50 | as.numeric(value_lab) > 0.50)
 
