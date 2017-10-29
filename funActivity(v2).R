@@ -382,6 +382,7 @@ p_dti <-
 p_dti
 
 
+
 #########################################################################################
 ####SEGMENTED ANALYSIS####
 
@@ -472,7 +473,50 @@ p_grade_int_rate
 
 #########################################################################################
 #####BIVARIATE ANALYSIS PLOTS####
+
+# Summary of Loan Amount by Issued Year
+p_yearwise <- sumAmnts(loan, issue_year) %>%
+  ggplot(aes(x = issue_year, y = total_issued, fill = issue_year)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Year", y ="Total Loan Issued") +
+  ggtitle("Loan Issued Grouped by Year") +
+  theme_gdocs()
+
+p_monthyear <- sumAmnts(loan, issue_year, issue_d) %>%
+  ggplot(aes(x = issue_d, y = total_issued, fill = issue_year)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Month-Year", y ="Total Loan Issued") +
+  ggtitle("Loan Issued Grouped by Month-Year") +
+  guides(fill=guide_legend("Issue Year")) +
+  theme_gdocs()
+
+grid.arrange(p_yearwise, p_monthyear, nrow = 2)
+
+
+#Loan of different grades changing over time
+ggplot(loan %>% 
+         select(issue_d, loan_amnt, grade) %>% 
+         group_by(issue_d, grade) %>% 
+         summarise(Amount = sum(loan_amnt)),aes(x = issue_d, y = Amount))+
+  geom_area(aes(fill=grade)) + 
+  labs(x="Date issued",y="Amount")+
+  ggtitle("Loan Amount by Date issued for different grades")+
+  theme_gdocs()
+# There is an uptrend as the year passes by
+# There is a slight dip after 2008; maybe because of the Recession
+
+# Considering only the CHARGED OFF Loan Status (i.e. the Defaulters)
 loan_chargedoff <- filter(loan, loan_status=="Charged Off")
+
+
+#Distribution of loan amounts by status
+ggplot(loan, aes(loan_status, loan_amnt))+
+  geom_boxplot(aes(fill = loan_status)) +
+  labs(x = "Status",y = "Amount") +
+  guides(fill=guide_legend("Loan Status")) +
+  ggtitle("Loan amount by status") +
+  theme_gdocs()
+
 
 #Analysing only charged off loan status
 
@@ -687,7 +731,7 @@ p_grade_creditloss_term
 
 
 ####################################################################################
-### Plotting Map Visualization for US States 
+#### Plotting Map Visualization for US States ####
 
 #states_map contains every Latitude and Longitude for each US States
 states_map <-map_data("state") 
@@ -710,10 +754,6 @@ map <- ggplot(loan, aes(map_id = State)) +
   guides(fill = guide_colorbar(barwidth = 10, barheight = .5)) + 
   scale_fill_gradient(low="#56B1F7", high="#132B43")
 
-
-######PLOT##############################################################################
-###PLOTS
-
 # Plot showing US States with most Loan
 ggplot(loan, aes(map_id = State)) + 
   geom_map(aes(fill = loan_amnt), map = states_map) +
@@ -731,24 +771,6 @@ ggplot(loan, aes(map_id = State)) +
 # We see only few states are have dense concentration. That means, it is not uniformly allocated.
 
 
-# Finding States with highest Loan Amount
-
-loan %>% 
-  group_by(addr_state) %>% 
-  summarise(total_loan = sum(loan_amnt)) %>% 
-  top_n(10) %>%
-  arrange(desc(total_loan)) %>%
-  ggplot(aes(x = reorder(addr_state,total_loan), y = total_loan, fill = "red")) +
-  geom_bar(stat = "identity") +
-  coord_flip()+
-  labs(x = "States", y ="Total Loan Issued") +
-  ggtitle("Loan Issued Grouped by States") +
-  theme_gdocs()
-
-# CA is leading with the most Loan Amount
-# Followed by NY, TX, FL, NJ
-
-
 # States Track Record
 map + geom_map(aes(fill = loan_amnt), map = states_map) +
   guides(fill=guide_legend(title="Loan Amount")) +
@@ -758,106 +780,8 @@ map + geom_map(aes(fill = loan_amnt), map = states_map) +
   theme_gdocs()
 
 
-# Loan Amount
-summary(loan$loan_amnt)
-
-# Looking at total Loan Amount per Loan Status
-sumAmnts(loan, loan_status)
-
-# Looking at some statistics for each Loan Status
-sumStats(loan, loan_status)
-
-# Bar chart of distribution of Loan Amount accross different Statuses.
-sumAmnts(loan, loan_status) %>%
-  ggplot(aes(x = loan_status, y = total_issued, fill = loan_status)) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = total_issued), position = position_stack(vjust = .5)) +
-  labs(x = "Loan Status ", y ="Total Loan Issued") +
-  ggtitle("Loan Issued Grouped by Status") +
-  guides(fill=guide_legend("Loan Status")) +
-  theme_gdocs()
-
-
-# Statistics for the year of Issuance of Loan
-sumStats(loan, issue_year)
-
-
-p1 <- sumAmnts(loan, issue_year) %>%
-  ggplot(aes(x = issue_year, y = total_issued, fill = issue_year)) +
-  geom_bar(stat = "identity") +
-  labs(x = "Year", y ="Total Loan Issued") +
-  ggtitle("Loan Issued Grouped by Year") +
-  theme_gdocs()
-
-p2 <- sumAmnts(loan, issue_year, issue_d) %>%
-  ggplot(aes(x = issue_d, y = total_issued, fill = issue_year)) +
-  geom_bar(stat = "identity") +
-  labs(x = "Month-Year", y ="Total Loan Issued") +
-  ggtitle("Loan Issued Grouped by Month-Year") +
-  guides(fill=guide_legend("Issue Year")) +
-  theme_gdocs()
-
-# Summary of Loan Amount by Issued Year
-grid.arrange(p1, p2, nrow = 2)
-
-#Loan of different grades changing over time
-ggplot(loan %>% 
-         select(issue_d, loan_amnt, grade) %>% 
-         group_by(issue_d, grade) %>% 
-         summarise(Amount = sum(loan_amnt)),aes(x = issue_d, y = Amount))+
-  geom_area(aes(fill=grade)) + 
-  labs(x="Date issued",y="Amount")+
-  ggtitle("Loan Amount by Date issued for different grades")+
-  theme_gdocs()
-
-# Looking at Grade Statistics
-sumAmnts(loan, grade)
-
-# Distribution of Loans accross the different Loan Grades
-ggplot(loan,aes(x=loan$grade,fill=loan_status))+
-  geom_bar()+
-  geom_text(stat = 'count', aes(label = ..count..),position = position_stack(vjust=0.5)) +
-  guides(fill=guide_legend("Loan Status")) +
-  labs(x = "Loan Grade", y ="Count") +
-  ggtitle("Frequency of Loan Grades") +
-  theme_gdocs()
-
-# Distribution of Loans accross different Loan Sub-Grades
-ggplot(loan,aes(x=loan$sub_grade,fill=loan_status))+
-  geom_bar()+
-  geom_text(stat = 'count', aes(label = ..count..),position = position_stack(vjust=0.5)) +
-  guides(fill=guide_legend("Loan Status")) +
-  labs(x = "Loan Sub-Grades", y ="Count") +
-  ggtitle("Frequency of Loan Sub-Grades") +
-  theme_gdocs()
-
-
-#Distribution of loan amounts by status
-ggplot(loan, aes(loan_status, loan_amnt))+
-  geom_boxplot(aes(fill = loan_status)) +
-  labs(x = "Status",y = "Amount") +
-  guides(fill=guide_legend("Loan Status")) +
-  ggtitle("Loan amount by status") +
-  theme_gdocs()
-
-
-# Loan taken by different sections of the Home Owners
-
-sumAmnts(loan, home_ownership)
-
-sumAmnts(loan, home_ownership, loan_status) %>% 
-  ggplot(aes(x = home_ownership, y = total_issued, fill = loan_status)) +
-  geom_bar(stat = "identity") +
-  labs(x = "Home Ownership", y ="Total Loan Issued") +
-  guides(fill=guide_legend("Loan Status")) +
-  ggtitle("Loan Issued grouped by Home Ownership") +
-  theme_gdocs()
-
-
-
 
 # Revolving Balance
-
 sumAmnts(loan, revol_bal_bucket)
 
 sumAmnts(loan, revol_bal_bucket) %>%
@@ -869,114 +793,39 @@ sumAmnts(loan, revol_bal_bucket) %>%
   ggtitle("Revoling Balance for What Purpose") +
   theme_gdocs()
 
-# Employment Length
-sumAmnts(loan, emp_length)
+#########################################################################################
+####Correlation Matrix####
 
-sumAmnts(loan, emp_length) %>%
-  ggplot(aes(x = emp_length, y = total_issued, fill = "red")) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = total_issued),position = position_stack(vjust=0.5)) +
-  labs(x = "Employment Length", y ="Total Loan Issued") +
-  ggtitle("Employment Length of people taking loans") +
-  theme_gdocs()
+#loan$term2 <- as.numeric(str_replace(loan$term, "months", ""))
+#loan_measures <- Filter(is.numeric, loan)
+#loan_measures_corMat<- as.matrix(cor(loan_measures))
+#loan_measures_corMat[lower.tri(loan_measures_corMat)]<-NA
 
+#loan_measures_corMat_melted <-melt(loan_measures_corMat)
+#loan_measures_corMat_melted <-data.frame(loan_measures_corMat_melted [!is.na(loan_measures_corMat_melted[,3]),]) # get rid of the NA matrix entries
+#loan_measures_corMat_melted$value_lab<-sprintf('%.2f',loan_measures_corMat_melted$value)
 
-# Delinquency Bucket
-sumAmnts(loan, delinq_2yrs)
+#ggplot(loan_measures_corMat_melted, aes(Var2, Var1, fill = value, label=value_lab),color='blue') + 
+#  geom_tile() + 
+#  geom_text() +
+#  xlab('')+
+#  ylab('')+
+#  theme_minimal() +
+#  theme(axis.text.x = element_text(size=10, hjust=-0.08, angle= -35 ))
 
+#loan_measures_corMat_melted_2 <- filter(loan_measures_corMat_melted, as.numeric(value_lab) < -0.50 | as.numeric(value_lab) > 0.50)
 
-# Debt-to-Income Ratio
-sumAmnts(loan, dti_bucket)
+#ggplot(loan_measures_corMat_melted_2, aes(Var2, Var1, fill = value, label=value_lab),color='blue') + 
+#  geom_tile() + 
+#  geom_text() +
+#  xlab('')+
+#  ylab('')+
+#  theme_minimal() + 
+#  theme(axis.text.x = element_text(size=10, hjust=-0.08, angle= -35 ))
 
-loan %>%
-  ggplot(aes(grade, dti, color = grade)) +
-  geom_boxplot() +
-  theme_gdocs() +
-  xlab("Loan Grades ranging from A to G") +
-  ylab("DTI (Debt to Income Ratio (%)") +
-  ggtitle("DTI Distribution vs. Loan Grades")
-
-
-
-ggplot(loan,aes(x=loan$verification_status,fill=loan_status))+
-  geom_bar()+
-  guides(fill=guide_legend("Loan Status")) +
-  geom_text(stat = 'count', aes(label = ..count..),position = position_stack(vjust=0.5)) +
-  labs(x = "Verification Status", y ="Count") +
-  ggtitle("Frequency of Verification Status") +
-  theme_gdocs()
-
-ggplot(loan,aes(x=loan$purpose,fill=loan_status))+
-  geom_bar() + 
-  coord_flip()+
-  guides(fill=guide_legend("Loan Status")) +
-  labs(x = "Loan Purpose", y ="Count") +
-  ggtitle("Frequency of Loan Purpose") +
-  theme_gdocs()
-
-ggplot(loan,aes(x=loan$term,fill=loan_status))+
-  geom_bar()+
-  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5))+
-  guides(fill=guide_legend("Loan Status")) +
-  labs(x = "Loan Term", y ="Count") +
-  ggtitle("Frequency of Loan Term") +
-  theme_gdocs()
-
-ggplot(loan,aes(x=loan$emp_length,fill=loan_status))+
-  geom_bar() +
-  geom_text(stat = 'count', aes(label = ..count..), position = position_stack(vjust = 0.5)) +
-  labs(x = "Employement Length", y ="Count") +
-  guides(fill=guide_legend("Loan Status")) +
-  ggtitle("Frequency of Employement") +
-  theme_gdocs()
-
-
-ggplot(loan,aes(x=loan$int_rate_bucket,fill=loan_status))+
-  geom_bar(stat = "count") +
-  labs(x = "Interest Rate", y ="Count") +
-  ggtitle("Frequency of Interest Rate") +
-  theme_gdocs()
-
-
-#Box plots on measure variables
-
-
-## Correlation matrix
-
-loan$term2 <- as.numeric(str_replace(loan$term, "months", ""))
-
-loan_measures <- Filter(is.numeric, loan)
-
-loan_measures_corMat<- as.matrix(cor(loan_measures))
-
-loan_measures_corMat[lower.tri(loan_measures_corMat)]<-NA
-
-loan_measures_corMat_melted <-melt(loan_measures_corMat)
-loan_measures_corMat_melted <-data.frame(loan_measures_corMat_melted [!is.na(loan_measures_corMat_melted[,3]),]) # get rid of the NA matrix entries
-loan_measures_corMat_melted$value_lab<-sprintf('%.2f',loan_measures_corMat_melted$value)
-
-ggplot(loan_measures_corMat_melted, aes(Var2, Var1, fill = value, label=value_lab),color='blue') + 
-  geom_tile() + 
-  geom_text() +
-  xlab('')+
-  ylab('')+
-  theme_minimal() +
-  theme(axis.text.x = element_text(size=10, hjust=-0.08, angle= -35 ))
-
-loan_measures_corMat_melted_2 <- filter(loan_measures_corMat_melted, as.numeric(value_lab) < -0.50 | as.numeric(value_lab) > 0.50)
-
-ggplot(loan_measures_corMat_melted_2, aes(Var2, Var1, fill = value, label=value_lab),color='blue') + 
-  geom_tile() + 
-  geom_text() +
-  xlab('')+
-  ylab('')+
-  theme_minimal() + 
-  theme(axis.text.x = element_text(size=10, hjust=-0.08, angle= -35 ))
-
-loan_measures_corMat_melted_3 <- filter(loan_measures_corMat_melted_2, Var1 != Var2)
+#loan_measures_corMat_melted_3 <- filter(loan_measures_corMat_melted_2, Var1 != Var2)
 
 # Quantitative variables which are co-related
 # 11 in m3
 # 26 in m
-unique(loan_measures_corMat_melted_3$Var1)
-
+#unique(loan_measures_corMat_melted_3$Var1)
