@@ -370,6 +370,7 @@ p_purpose_loan_amt <-
   ggplot(aes(x = reorder(purpose,total_loan), y = total_loan, fill = "red")) +
   geom_bar(stat = "identity") +
   coord_flip()+
+  geom_text(aes(label= total_loan),vjust= 0.5, hjust = -0.1, size = 3) +
   labs(x = "Purpose", y ="Total Loan Issued") +
   ggtitle("Purpose vs Total Loan Amount") +
   theme_gdocs()+ 
@@ -390,6 +391,7 @@ p_home_ownership_loan_amt <-
   geom_bar(stat = "identity") +
   labs(x = "Home Ownership", y ="Total Loan Issued") +
   ggtitle("Home Ownership vs Total Loan Amount") +
+  geom_text(aes(label=total_loan),vjust= -0.5, size = 3) +
   theme_gdocs()+ 
   guides(fill=FALSE)
 
@@ -407,6 +409,7 @@ p_term_loan_amt <-
   geom_bar(stat = "identity") +
   labs(x = "Term", y ="Total Loan Issued") +
   ggtitle("Term vs Total Loan Amount") +
+  geom_text(aes(label=total_loan),vjust= -0.5, size = 3.5) +
   theme_gdocs()+ 
   guides(fill=FALSE)
 
@@ -438,6 +441,7 @@ p_emp_length_loan_amt <-
   geom_bar(stat = "identity") +
   labs(x = "Length of Employment", y ="Total Loan Issued") +
   ggtitle("Borrower's Employment Length vs Total Loan Amount") +
+  geom_text(aes(label=total_loan),vjust= -.5,  size = 4) +
   theme_gdocs()+ 
   guides(fill=FALSE)
 
@@ -455,6 +459,7 @@ p_grade_loan_amt <-
   geom_bar(stat = "identity") +
   labs(x = "Loan Grade", y ="Total Loan Issued") +
   ggtitle("Loan Grade vs Total Loan Amount") +
+  geom_text(aes(label=total_loan),vjust= -.5,  size = 4) +
   theme_gdocs()+ 
   guides(fill=FALSE)
 
