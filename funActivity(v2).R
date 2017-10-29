@@ -245,6 +245,7 @@ p_purpose_hist <- loan %>%
   labs(x = "Loan Purpose", y ="Count") +
   theme_gdocs() + 
   guides(fill=FALSE)
+
 p_purpose_hist
 
 
@@ -261,6 +262,7 @@ p_funded_amnt_freq <-
 p_funded_amnt_box <- loan %>% 
   ggplot(aes(x = factor(0), loan_amnt)) +
   geom_boxplot() +
+  theme_gdocs() +
   coord_flip()
 
 grid.arrange(p_funded_amnt_freq, p_funded_amnt_box, nrow = 2)
@@ -276,7 +278,7 @@ p_loan_status <- loan %>%
   theme_gdocs() +
   guides(fill = FALSE)
 
-
+p_loan_status
 
 # Analyzing US States
 p_US_bar <- loan %>% 
@@ -291,6 +293,7 @@ p_US_bar <- loan %>%
   theme_gdocs()+
   guides(fill = FALSE)
 
+p_US_bar
 
 # Analyzing Issued Date of Loans
 p_Issue_Date_hist <- loan %>%
@@ -300,6 +303,142 @@ p_Issue_Date_hist <- loan %>%
   ggtitle("Loan Issued Grouped by Year") +
   theme_gdocs()+
   guides(fill = FALSE)
+
+p_Issue_Date_hist
+
+#########################################################################################
+####SEGMENTED ANALYSIS####
+
+#Purpose
+sumAmnts(loan, purpose)
+
+p_purpose_loan_amt <- 
+  loan %>% 
+  group_by(purpose) %>% 
+  summarise(total_loan = sum(loan_amnt)) %>% 
+  arrange(desc(total_loan)) %>%
+  ggplot(aes(x = reorder(purpose,total_loan), y = total_loan, fill = "red")) +
+  geom_bar(stat = "identity") +
+  coord_flip()+
+  labs(x = "Purpose", y ="Total Loan Issued") +
+  ggtitle("Purpose vs Total Loan Amount") +
+  theme_gdocs()+ 
+  guides(fill=FALSE)
+
+p_purpose_loan_amt
+
+#Home Ownership
+sumAmnts(loan, home_ownership)
+
+p_home_ownership_loan_amt <- 
+  loan %>% 
+  group_by(home_ownership) %>% 
+  summarise(total_loan = sum(loan_amnt)) %>% 
+  arrange(desc(total_loan)) %>%
+  ggplot(aes(x = reorder(home_ownership,-total_loan), y = total_loan, fill = "red")) +
+  geom_bar(stat = "identity") +
+  labs(x = "Home Ownership", y ="Total Loan Issued") +
+  ggtitle("Home Ownership vs Total Loan Amount") +
+  theme_gdocs()+ 
+  guides(fill=FALSE)
+
+p_home_ownership_loan_amt
+
+#Term
+sumAmnts(loan, term)
+
+p_term_loan_amt <- 
+  loan %>% 
+  group_by(term) %>% 
+  summarise(total_loan = sum(loan_amnt)) %>% 
+  ggplot(aes(x = term, y = total_loan, fill = "red")) +
+  geom_bar(stat = "identity") +
+  labs(x = "Term", y ="Total Loan Issued") +
+  ggtitle("Term vs Total Loan Amount") +
+  theme_gdocs()+ 
+  guides(fill=FALSE)
+
+p_term_loan_amt
+
+#Interest Rate
+sumAmnts(loan, int_rate_bucket)
+
+p_int_rate_loan_amt <- 
+  loan %>% 
+  group_by(int_rate_bucket) %>% 
+  summarise(total_loan = sum(loan_amnt)) %>% 
+  ggplot(aes(x = int_rate_bucket, y = total_loan, fill = "red")) +
+  geom_bar(stat = "identity") +
+  labs(x = "Interest Rate", y ="Total Loan Issued") +
+  ggtitle("Interest Rate vs Total Loan Amount") +
+  theme_gdocs()+ 
+  guides(fill=FALSE)
+
+p_int_rate_loan_amt
+
+
+#Employment Length
+sumAmnts(loan, emp_length)
+
+p_emp_length_loan_amt <- 
+  loan %>% 
+  group_by(emp_length) %>% 
+  summarise(total_loan = sum(loan_amnt)) %>% 
+  ggplot(aes(x = emp_length, y = total_loan, fill = "red")) +
+  geom_bar(stat = "identity") +
+  labs(x = "Employment Length", y ="Total Loan Issued") +
+  ggtitle("Employment Length vs Total Loan Amount") +
+  theme_gdocs()+ 
+  guides(fill=FALSE)
+
+p_emp_length_loan_amt
+
+#Grades
+sumAmnts(loan, grade)
+
+p_grade_loan_amt <- 
+  loan %>% 
+  group_by(grade) %>% 
+  summarise(total_loan = sum(loan_amnt)) %>% 
+  ggplot(aes(x = grade, y = total_loan, fill = "red")) +
+  geom_bar(stat = "identity") +
+  labs(x = "Grade", y ="Total Loan Issued") +
+  ggtitle("Loan Grade vs Total Loan Amount") +
+  theme_gdocs()+ 
+  guides(fill=FALSE)
+
+p_grade_loan_amt
+
+#Grades vs Interest
+
+p_grade_int_rate <- 
+  loan %>% 
+  ggplot(aes(x = grade, y = int_rate_perc, fill = "red")) +
+  geom_boxplot() +
+  labs(x = "Grade", y ="Interest Rates") +
+  ggtitle("Loan Grade vs Interest Rates") +
+  theme_gdocs()+ 
+  guides(fill=FALSE)
+
+p_grade_int_rate
+
+#Debt-To-Income Ratio
+sumAmnts(loan, dti_bucket)
+
+p_dti_loan_amt <- 
+  loan %>% 
+  group_by(dti_bucket) %>% 
+  summarise(total_loan = sum(loan_amnt)) %>% 
+  ggplot(aes(x = dti_bucket, y = total_loan, fill = "red")) +
+  geom_bar(stat = "identity") +
+  labs(x = "Debt To income", y ="Total Loan Issued") +
+  ggtitle("Debt To Income Ratio vs Total Loan Amount") +
+  theme_gdocs()+ 
+  guides(fill=FALSE)
+
+p_dti_loan_amt
+
+
 
 ####################################################################################
 ### Plotting Map Visualization for US States 
@@ -645,19 +784,3 @@ ggplot(loan %>%
   ggtitle("Credit Loss for home_ownership")+
   theme_gdocs()
 
-#########################################################################################
-####SEGMENTED ANALYSIS####
-
-#Purpose
-sumAmnts(loan, purpose)
-
-issued_amount_purpose <- sumAmnts(loan, purpose) %>%
-  ggplot(aes(x = purpose, y = total_issued, fill = "red")) +
-  geom_bar(stat = "identity") +
-  coord_flip() +
-  labs(x = " Loan Purpose", y ="Total Loan Issued") +
-  ggtitle("Purpose vs Total Loan Amount") +
-  theme_gdocs()  + 
-  guides(fill=FALSE)
-
-grid.arrange(frequency_of_purpose, issued_amount_purpose, nrow = 1)
