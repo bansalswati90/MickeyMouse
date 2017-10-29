@@ -304,6 +304,25 @@ p_Issue_Date_hist <- loan %>%
 
 p_Issue_Date_hist
 
+#Credit Loss for Charged off Status
+p_creditloss_freq <- 
+  loan %>% filter(loan_status=="Charged Off") %>%
+  ggplot(aes(x = credit_loss, fill = "red")) +
+  geom_histogram() +
+  ggtitle("Credit Loss Histogram") +
+  labs(x = "Credit Loss", y = "Count") +
+  theme_gdocs() +
+  guides(fill = FALSE)
+
+p_creditloss_box <- loan %>% filter(loan_status=="Charged Off") %>%
+  ggplot(aes(x = factor(0), credit_loss)) +
+  geom_boxplot() +
+  theme_gdocs() +
+  coord_flip()
+
+grid.arrange(p_creditloss_freq, p_creditloss_box, nrow = 2)
+
+
 #########################################################################################
 ####SEGMENTED ANALYSIS####
 
@@ -431,8 +450,7 @@ p_dti <-
 p_dti
 
 #########################################################################################
-######BIVARIATE ANALYSIS PLOTS
-
+#####BIVARIATE ANALYSIS PLOTS####
 
 ggplot(loan %>% 
          select(int_rate_bucket, credit_loss) %>% 
