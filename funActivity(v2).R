@@ -222,7 +222,7 @@ p_loan_amnt_freq <-
   loan %>%
   ggplot(aes(x = loan_amnt, fill = "red")) +
   geom_histogram() +
-  ggtitle("Loan Amount Histogram") +
+  ggtitle("Frequency Distribution - Loan Amount") +
   labs(x = "Loan Amount", y = "Count") +
   theme_gdocs() +
   guides(fill = FALSE)
@@ -233,7 +233,6 @@ p_loan_amnt_box <- loan %>%
   coord_flip()
 
 grid.arrange(p_loan_amnt_freq, p_loan_amnt_box, nrow = 2)
-
 
 
 # Analyzing Purpose of the Loan
@@ -266,7 +265,6 @@ p_funded_amnt_box <- loan %>%
   coord_flip()
 
 grid.arrange(p_funded_amnt_freq, p_funded_amnt_box, nrow = 2)
-
 
 
 # Analyzing Loan Status
@@ -361,20 +359,17 @@ p_term_loan_amt <-
 p_term_loan_amt
 
 #Interest Rate
-sumAmnts(loan, int_rate_bucket)
-
-p_int_rate_loan_amt <- 
+p_int_rate <- 
   loan %>% 
-  group_by(int_rate_bucket) %>% 
-  summarise(total_loan = sum(loan_amnt)) %>% 
-  ggplot(aes(x = int_rate_bucket, y = total_loan, fill = "red")) +
-  geom_bar(stat = "identity") +
-  labs(x = "Interest Rate", y ="Total Loan Issued") +
-  ggtitle("Interest Rate vs Total Loan Amount") +
-  theme_gdocs()+ 
-  guides(fill=FALSE)
+  ggplot(aes(x =factor(0),int_rate_perc, fill = int_rate_bucket)) +
+  geom_boxplot() +
+  labs(x = "",y="Interest Rate") +
+  ggtitle("Interest Rate") +
+  guides(fill=guide_legend("Interest Rate")) + 
+  theme_gdocs()
 
-p_int_rate_loan_amt
+
+p_int_rate
 
 
 #Employment Length
@@ -422,21 +417,68 @@ p_grade_int_rate <-
 
 p_grade_int_rate
 
-#Debt-To-Income Ratio
-sumAmnts(loan, dti_bucket)
-
-p_dti_loan_amt <- 
+#Debt-To-Income
+p_dti <- 
   loan %>% 
-  group_by(dti_bucket) %>% 
-  summarise(total_loan = sum(loan_amnt)) %>% 
-  ggplot(aes(x = dti_bucket, y = total_loan, fill = "red")) +
-  geom_bar(stat = "identity") +
-  labs(x = "Debt To income", y ="Total Loan Issued") +
-  ggtitle("Debt To Income Ratio vs Total Loan Amount") +
-  theme_gdocs()+ 
-  guides(fill=FALSE)
+  ggplot(aes(x =factor(0),dti, fill = dti_bucket)) +
+  geom_boxplot() +
+  labs(x = "",y="Debt To Income") +
+  ggtitle("Debt To Income") +
+  guides(fill=guide_legend("Debt To Income")) + 
+  theme_gdocs()
 
-p_dti_loan_amt
+
+p_dti
+
+#########################################################################################
+######BIVARIATE ANALYSIS PLOTS
+
+
+ggplot(loan %>% 
+         select(int_rate_bucket, credit_loss) %>% 
+         group_by(int_rate_bucket) %>% 
+         summarise(CreditLoss = sum(credit_loss)),aes(x = int_rate_bucket, y = CreditLoss, fill = "red"))+
+  geom_bar(stat="identity") + 
+  labs(x="Interest Rate",y="Credit Loss")+
+  ggtitle("Credit Loss for interest Rate")+
+  theme_gdocs()
+
+ggplot(loan %>% 
+         select(dti_bucket, credit_loss) %>% 
+         group_by(dti_bucket) %>% 
+         summarise(CreditLoss = sum(credit_loss)),aes(x = dti_bucket, y = CreditLoss, fill = "red"))+
+  geom_bar(stat="identity") + 
+  labs(x="DTI",y="Credit Loss")+
+  ggtitle("Credit Loss for DTI")+
+  theme_gdocs()
+
+ggplot(loan %>% 
+         select(annual_inc_bucket, credit_loss) %>% 
+         group_by(annual_inc_bucket) %>% 
+         summarise(CreditLoss = sum(credit_loss)),aes(x = annual_inc_bucket, y = CreditLoss, fill = "red"))+
+  geom_bar(stat="identity") + 
+  labs(x="Annual Income",y="Credit Loss")+
+  ggtitle("Credit Loss for Annual Income")+
+  theme_gdocs()
+
+
+ggplot(loan %>% 
+         select(term, credit_loss) %>% 
+         group_by(term) %>% 
+         summarise(CreditLoss = sum(credit_loss)),aes(x = term, y = CreditLoss, fill = "red"))+
+  geom_bar(stat="identity") + 
+  labs(x="Term",y="Credit Loss")+
+  ggtitle("Credit Loss for Term")+
+  theme_gdocs()
+
+ggplot(loan %>% 
+         select(home_ownership, credit_loss) %>% 
+         group_by(home_ownership) %>% 
+         summarise(CreditLoss = sum(credit_loss)),aes(x = home_ownership, y = CreditLoss, fill = "red"))+
+  geom_bar(stat="identity") + 
+  labs(x="home_ownership",y="Credit Loss")+
+  ggtitle("Credit Loss for home_ownership")+
+  theme_gdocs()
 
 
 
@@ -733,54 +775,4 @@ loan_measures_corMat_melted_3 <- filter(loan_measures_corMat_melted_2, Var1 != V
 # 11 in m3
 # 26 in m
 unique(loan_measures_corMat_melted_3$Var1)
-
-#########################################################################################
-######BIVARIATE ANALYSIS PLOTS
-
-
-ggplot(loan %>% 
-         select(int_rate_bucket, credit_loss) %>% 
-         group_by(int_rate_bucket) %>% 
-         summarise(CreditLoss = sum(credit_loss)),aes(x = int_rate_bucket, y = CreditLoss, fill = "red"))+
-  geom_bar(stat="identity") + 
-  labs(x="Interest Rate",y="Credit Loss")+
-  ggtitle("Credit Loss for interest Rate")+
-  theme_gdocs()
-
-ggplot(loan %>% 
-         select(dti_bucket, credit_loss) %>% 
-         group_by(dti_bucket) %>% 
-         summarise(CreditLoss = sum(credit_loss)),aes(x = dti_bucket, y = CreditLoss, fill = "red"))+
-  geom_bar(stat="identity") + 
-  labs(x="DTI",y="Credit Loss")+
-  ggtitle("Credit Loss for DTI")+
-  theme_gdocs()
-
-ggplot(loan %>% 
-         select(annual_inc_bucket, credit_loss) %>% 
-         group_by(annual_inc_bucket) %>% 
-         summarise(CreditLoss = sum(credit_loss)),aes(x = annual_inc_bucket, y = CreditLoss, fill = "red"))+
-  geom_bar(stat="identity") + 
-  labs(x="Annual Income",y="Credit Loss")+
-  ggtitle("Credit Loss for Annual Income")+
-  theme_gdocs()
-
-
-ggplot(loan %>% 
-         select(term, credit_loss) %>% 
-         group_by(term) %>% 
-         summarise(CreditLoss = sum(credit_loss)),aes(x = term, y = CreditLoss, fill = "red"))+
-  geom_bar(stat="identity") + 
-  labs(x="Term",y="Credit Loss")+
-  ggtitle("Credit Loss for Term")+
-  theme_gdocs()
-
-ggplot(loan %>% 
-         select(home_ownership, credit_loss) %>% 
-         group_by(home_ownership) %>% 
-         summarise(CreditLoss = sum(credit_loss)),aes(x = home_ownership, y = CreditLoss, fill = "red"))+
-  geom_bar(stat="identity") + 
-  labs(x="home_ownership",y="Credit Loss")+
-  ggtitle("Credit Loss for home_ownership")+
-  theme_gdocs()
 
