@@ -98,7 +98,6 @@ summary(loan)
 #loan_amnt, funded_amnt, funded_amnt_inv, installment, annual_inc
 summary(loan[,c(1,2,3,6, 12)])
 
-
 table(loan$term)
 # 2 terms - 36 months and 60 months
 
@@ -130,12 +129,14 @@ sumAmnts(loan, addr_state) %>%
 #####################################################################################
 ###Deriving columns
 
+#Calculating the Credit Loss as Funded Amount - Total Received Principal
+loan$credit_loss <- loan$funded_amnt - loan$total_rec_prncp
+
 # Extracting Year from Loan Issued Date
 loan$issue_year <- format(loan$issue_d, "%Y")
 sumAmnts(loan, issue_year)
 
 #converting the Employment Length field into ordered factor
-
 loan$emp_length <- factor(loan$emp_length, 
                           levels = c("< 1 year","1 year", "2 years", "3 years","4 years", "5 years", "6 years","7 years","8 years","9 years","10+ years"))
 
@@ -210,40 +211,95 @@ loan <- loan %>%
 loan$int_rate_bucket <- factor(loan$int_rate_bucket, 
                                levels = c("0","< 8", "8-11", "11-14", "14-17", "> 17"),ordered=TRUE)
 
-#Calculating the credit loss as funded_amt-total_rec_prncp
-loan$credit_loss <- loan$funded_amnt - loan$total_rec_prncp
 
 
 
+####################################################################################
+####UNIVARIATE ANALYSIS####
 
-##ANALYSIS##################################################################################
+# Analyzing Loan Amount
+p_loan_amnt_freq <- 
+  loan %>%
+  ggplot(aes(x = loan_amnt, fill = "red")) +
+  geom_histogram() +
+  ggtitle("Loan Amount Histogram") +
+  labs(x = "Loan Amount", y = "Count") +
+  theme_gdocs() +
+  guides(fill = FALSE)
 
-# Analyzing Loan Amounts with respects to Purpose of the Loan
-sumAmnts(loan, purpose)
+p_loan_amnt_box <- loan %>% 
+  ggplot(aes(x = factor(0), loan_amnt)) +
+  geom_boxplot() +
+  coord_flip()
 
-frequency_of_purpose <- loan %>%
+grid.arrange(p_loan_amnt_freq, p_loan_amnt_box, nrow = 2)
+
+
+
+# Analyzing Purpose of the Loan
+p_purpose_hist <- loan %>%
   ggplot(aes(x=purpose,fill="red")) +
   geom_bar() +
   coord_flip()+
-  guides(fill=guide_legend("Purpose")) +
   ggtitle("Frequency of Purpose") +
   labs(x = "Loan Purpose", y ="Count") +
   theme_gdocs() + 
   guides(fill=FALSE)
+p_purpose_hist
 
-issued_amount_purpose <- sumAmnts(loan, purpose) %>%
-  ggplot(aes(x = purpose, y = total_issued, fill = "red")) +
+
+# Analyzing Funded Amount
+p_funded_amnt_freq <- 
+  loan %>%
+  ggplot(aes(x = funded_amnt, fill = "red")) +
+  geom_histogram() +
+  ggtitle("Funded Amount Histogram") +
+  labs(x = "Funded Amount", y = "Count") +
+  theme_gdocs() +
+  guides(fill = FALSE)
+
+p_funded_amnt_box <- loan %>% 
+  ggplot(aes(x = factor(0), loan_amnt)) +
+  geom_boxplot() +
+  coord_flip()
+
+grid.arrange(p_funded_amnt_freq, p_funded_amnt_box, nrow = 2)
+
+
+
+# Analyzing Loan Status
+p_loan_status <- loan %>% 
+  ggplot(aes(x = loan_status, fill = "red")) + 
+  geom_bar() +
+  ggtitle("Loan Status Histogram") +
+  labs(x = "Loan Status", y = "Count") +
+  theme_gdocs() +
+  guides(fill = FALSE)
+
+
+
+# Analyzing US States
+p_US_bar <- loan %>% 
+  group_by(addr_state) %>% 
+  summarise(number = n()) %>% 
+  arrange(desc(number)) %>%
+  ggplot(aes(x = reorder(addr_state, number), y = number, fill = "red")) +
   geom_bar(stat = "identity") +
-  coord_flip() +
-  labs(x = " Loan Purpose", y ="Total Loan Issued") +
-  ggtitle("Purpose vs Total Loan Amount") +
-  theme_gdocs()  + 
-  guides(fill=FALSE)
-
-grid.arrange(frequency_of_purpose, issued_amount_purpose, nrow = 1)
+  coord_flip()+
+  labs(x = "States", y ="Frequency") +
+  ggtitle("Frequency of Loans per US States") +
+  theme_gdocs()+
+  guides(fill = FALSE)
 
 
-
+# Analyzing Issued Date of Loans
+p_Issue_Date_hist <- loan %>%
+  ggplot(aes(x = issue_d, fill = "red")) +
+  geom_bar() +
+  labs(x = "Year", y ="Total Loan Issued") +
+  ggtitle("Loan Issued Grouped by Year") +
+  theme_gdocs()+
+  guides(fill = FALSE)
 
 ####################################################################################
 ### Plotting Map Visualization for US States 
@@ -588,3 +644,20 @@ ggplot(loan %>%
   labs(x="home_ownership",y="Credit Loss")+
   ggtitle("Credit Loss for home_ownership")+
   theme_gdocs()
+
+#########################################################################################
+####SEGMENTED ANALYSIS####
+
+#Purpose
+sumAmnts(loan, purpose)
+
+issued_amount_purpose <- sumAmnts(loan, purpose) %>%
+  ggplot(aes(x = purpose, y = total_issued, fill = "red")) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(x = " Loan Purpose", y ="Total Loan Issued") +
+  ggtitle("Purpose vs Total Loan Amount") +
+  theme_gdocs()  + 
+  guides(fill=FALSE)
+
+grid.arrange(frequency_of_purpose, issued_amount_purpose, nrow = 1)
