@@ -252,6 +252,24 @@ p_funded_amnt_box <- loan %>%
 
 grid.arrange(p_funded_amnt_freq, p_funded_amnt_box, nrow = 2)
 
+# Analyzing Annual Income
+p_annual_inc_freq <- 
+  loan %>%
+  ggplot(aes(x = annual_inc, fill = "red")) +
+  geom_histogram() +
+  ggtitle("Annual Income Histogram") +
+  labs(x = "Annual Income", y = "Count") +
+  theme_gdocs() +
+  guides(fill = FALSE)
+
+p_annual_inc_box <- loan %>%
+  ggplot(aes(x = factor(0), annual_inc)) +
+  geom_boxplot() +
+  theme_gdocs() +
+  coord_flip()
+
+grid.arrange(p_annual_inc_freq, p_annual_inc_box, nrow = 2)
+
 #Credit Loss for Charged off Status
 p_creditloss_freq <- 
   loan %>% filter(loan_status=="Charged Off") %>%
@@ -269,7 +287,6 @@ p_creditloss_box <- loan %>% filter(loan_status=="Charged Off") %>%
   coord_flip()
 
 grid.arrange(p_creditloss_freq, p_creditloss_box, nrow = 2)
-
 
 # Analyzing Purpose of the Loan
 p_purpose_hist <- loan %>%
@@ -451,14 +468,17 @@ p_dti
 #########################################################################################
 #####BIVARIATE ANALYSIS PLOTS####
 
-ggplot(loan %>% 
+p_interest_creditloss <- 
+  ggplot(loan %>% 
          select(int_rate_bucket, credit_loss) %>% 
          group_by(int_rate_bucket) %>% 
          summarise(CreditLoss = sum(credit_loss)),aes(x = int_rate_bucket, y = CreditLoss, fill = "red"))+
   geom_bar(stat="identity") + 
   labs(x="Interest Rate",y="Credit Loss")+
   ggtitle("Credit Loss for interest Rate")+
+  guides(fill=FALSE) +
   theme_gdocs()
+p_interest_creditloss
 
 ggplot(loan %>% 
          select(dti_bucket, credit_loss) %>% 
