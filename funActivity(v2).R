@@ -115,13 +115,6 @@ table(clean_loan$grade)
 table(clean_loan$sub_grade)
 #Ranges from 5 sub grades for each grades - ranging from 1 to 5
 
-# Plotting basic plots to get basic understanding
-# Plots related to Loan
-par(mfrow = c(1,3))
-plot(clean_loan$term, main = 'Loan Terms')
-plot(clean_loan$grade, main = 'Assigned Loan Grade')
-plot(clean_loan$loan_status, main = 'Loan Status')
-
 table(clean_loan$home_ownership)
 # MORTGAGE - 17659; RENT - 18899; OWN - 3058
 # NONE - 3; OTHER - 98
@@ -131,12 +124,6 @@ table(clean_loan$home_ownership)
 clean_loan$home_ownership <- gsub("NONE", "OTHER", clean_loan$home_ownership)
 table(clean_loan$home_ownership)
 # 4 levels - Mortgage, Own, Rent, Other
-
-# Plots related to the Borrower
-par(mfrow = c(1,2))
-plot(clean_loan$verification_status, main = 'Borrower Income Verification Status')
-plot(clean_loan$home_ownership, main = 'Home Ownership of the Borrower')
-par(mfrow = c(1,1))
 
 # Most popular category provided by borrower for loan request.
 sumAmnts(clean_loan, purpose) %>% 
@@ -150,23 +137,21 @@ sumAmnts(clean_loan, addr_state) %>%
 #####################################################################################
 ###Deriving columns
 
-# Extracting Year and Month from Loan Issued Date
+# Extracting Year from Loan Issued Date
 clean_loan$issue_year <- format(clean_loan$issue_d, "%Y")
-clean_loan$issue_month <- format(clean_loan$issue_d, "%b")
 
 sumAmnts(clean_loan, issue_year)
-sumAmnts(clean_loan, issue_month) %>% arrange(desc(total_issued))
 
 
 # Creating buckets for Income Buckets
-grp <- quantile(clean_loan$annual_inc, seq(0,1,0.1))
-labels <- c(0, round(grp[2:10],0), "+inf")
-labels <- paste(labels[1:10], labels[2:11], sep = "-")
-clean_loan <- clean_loan %>% 
-  mutate(annual_inc_bucket = cut(clean_loan$annual_inc, 
-                                 breaks = grp, 
-                                 labels = factor(labels), 
-                                 include.lowest=TRUE))
+clean_loan <- clean_loan %>%
+  mutate(
+    annual_inc_bucket = ifelse(annual_inc < 35000,"< 35000",
+                             ifelse((annual_inc >= 35000 & annual_inc < 55000),"35000-55000",
+                                    ifelse((annual_inc >= 55000 & annual_inc < 75000),"55000-75000",
+                                           ifelse((annual_inc >= 75000 & annual_inc < 95000),"75000-95000",
+                                                  ifelse((annual_inc >= 95000 & annual_inc < 115000),"95000-115000",
+                                                         ifelse((annual_inc >= 115000 & annual_inc < 135000),"115000-135000","> 135000")))))))
 
 # Creating buckets for Debt-to-Income ratio
 clean_loan <- clean_loan %>%
