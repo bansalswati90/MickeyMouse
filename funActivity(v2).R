@@ -18,8 +18,8 @@ library(gridExtra)
 #####################################################################################
 ### LOADING DATA
 
-# Don't run below code if you've already extracted the CSV file
-unzip(zipfile = "loan.zip", exdir = ".")
+# Run below code if you've to extract the CSV file
+# unzip(zipfile = "loan.zip", exdir = ".")
 
 #Loading the loan dataset
 raw.loan <- read.csv("loan.csv",header = T, na.strings=c("NA", "n/a"))
