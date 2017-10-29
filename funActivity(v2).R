@@ -470,11 +470,14 @@ p_dti
 
 #########################################################################################
 #####BIVARIATE ANALYSIS PLOTS####
+loan_chargedoff <- filter(loan, loan_status=="Charged Off")
+
+#Analysing only charged off loan status
 
 #Interst Rate vs Credit Loss
 #Bargraph
 p_interest_creditloss <- 
-          ggplot(loan %>% 
+          ggplot(loan_chargedoff %>%
          select(int_rate_bucket, credit_loss) %>% 
          group_by(int_rate_bucket) %>% 
          summarise(CreditLoss = sum(credit_loss)),aes(x = int_rate_bucket, y = CreditLoss, fill = "red"))+
@@ -486,7 +489,7 @@ p_interest_creditloss <-
 
 #Scatterplot
 p_interest_creditloss_line <- 
-  ggplot(loan,
+  ggplot(loan_chargedoff,
 aes(x = int_rate_perc, y = credit_loss))+
   geom_point(alpha=0.1, size=3) + geom_smooth()+
   labs(x="Interest Rate",y="Credit Loss")+
@@ -508,6 +511,7 @@ p_fundamt_creditloss <-
   labs(x="Funded Amount",y="Credit Loss")+
   ggtitle("Funded Amount vs Credit Loss")+
   guides(fill=FALSE) +
+  theme(axis.text.x=element_text(angle=45,hjust=1))+
   theme_gdocs()
 
 #Scatterplot
