@@ -390,14 +390,11 @@ sumAmnts(loan, purpose)
 
 p_purpose_loan_amt <- 
   loan %>% 
-  group_by(purpose, loan_status) %>% 
-  summarise(total_loan = sum(loan_amnt)) %>% 
-  arrange(desc(total_loan)) %>%
-  ggplot(aes(x = reorder(purpose,total_loan), y = total_loan, fill = loan_status)) +
-  geom_bar(stat = "identity") +
+  ggplot(aes(x = purpose, fill = loan_status)) +
+  geom_bar() +
   coord_flip()+
-  labs(x = "Purpose", y ="Total Loan Issued") +
-  ggtitle("Purpose vs Total Loan Amount") +
+  labs(x = "Purpose", y ="Frequency") +
+  ggtitle("Loan Purpose Frequency") +
   theme_gdocs()+ 
   guides(fill=guide_legend("Loan Status"))
 p_purpose_loan_amt
@@ -408,13 +405,10 @@ sumAmnts(loan, home_ownership)
 
 p_home_ownership_loan_amt <- 
   loan %>% 
-  group_by(home_ownership, loan_status) %>% 
-  summarise(total_loan = sum(loan_amnt)) %>% 
-  arrange(desc(total_loan)) %>%
-  ggplot(aes(x = reorder(home_ownership,-total_loan), y = total_loan, fill = loan_status)) +
-  geom_bar(stat = "identity") +
-  labs(x = "Home Ownership", y ="Total Loan Issued") +
-  ggtitle("Home Ownership vs Total Loan Amount") +
+  ggplot(aes(x = home_ownership, fill = loan_status)) +
+  geom_bar() +
+  labs(x = "Home Ownership", y ="Frequency") +
+  ggtitle("Home Ownership Frequency") +
   theme_gdocs()+ 
   guides(fill=guide_legend("Loan Status"))
 
@@ -426,12 +420,10 @@ sumAmnts(loan, term)
 
 p_term_loan_amt <- 
   loan %>% 
-  group_by(term, loan_status) %>% 
-  summarise(total_loan = sum(loan_amnt)) %>% 
-  ggplot(aes(x = term, y = total_loan, fill = loan_status)) +
-  geom_bar(stat = "identity") +
-  labs(x = "Term", y ="Total Loan Issued") +
-  ggtitle("Term vs Total Loan Amount") +
+  ggplot(aes(x = term, fill = loan_status)) +
+  geom_bar() +
+  labs(x = "Loan Term", y ="Frequency") +
+  ggtitle("Loan Term Frequency") +
   theme_gdocs()+ 
   guides(fill=guide_legend("Loan Status"))
 p_term_loan_amt
@@ -442,12 +434,10 @@ sumAmnts(loan, emp_length)
 
 p_emp_length_loan_amt <- 
   loan %>% 
-  group_by(emp_length, loan_status) %>% 
-  summarise(total_loan = sum(loan_amnt)) %>% 
-  ggplot(aes(x = emp_length, y = total_loan, fill = loan_status)) +
-  geom_bar(stat = "identity") +
-  labs(x = "Length of Employment", y ="Total Loan Issued") +
-  ggtitle("Borrower's Employment Length vs Total Loan Amount") +
+  ggplot(aes(x = emp_length, fill = loan_status)) +
+  geom_bar() +
+  labs(x = "Length of Employment", y ="Frequency") +
+  ggtitle("Borrower's Employment Length Frequency Plot") +
   theme_gdocs()+ 
   guides(fill=guide_legend("Loan Status"))
 p_emp_length_loan_amt
@@ -458,12 +448,10 @@ sumAmnts(loan, grade)
 
 p_grade_loan_amt <- 
   loan %>% 
-  group_by(grade, loan_status) %>% 
-  summarise(total_loan = sum(loan_amnt)) %>% 
-  ggplot(aes(x = grade, y = total_loan, fill = loan_status)) +
-  geom_bar(stat = "identity") +
-  labs(x = "Loan Grade", y ="Total Loan Issued") +
-  ggtitle("Loan Grade vs Total Loan Amount") +
+  ggplot(aes(x = grade, fill = loan_status)) +
+  geom_bar() +
+  labs(x = "Loan Grade", y ="Frequency") +
+  ggtitle("Loan Grade Frequency") +
   theme_gdocs()+ 
   guides(fill=guide_legend("Loan Status"))
 p_grade_loan_amt
