@@ -234,20 +234,6 @@ p_loan_amnt_box <- loan %>%
 
 grid.arrange(p_loan_amnt_freq, p_loan_amnt_box, nrow = 2)
 
-
-# Analyzing Purpose of the Loan
-p_purpose_hist <- loan %>%
-  ggplot(aes(x=purpose,fill="red")) +
-  geom_bar() +
-  coord_flip()+
-  ggtitle("Frequency of Purpose") +
-  labs(x = "Loan Purpose", y ="Count") +
-  theme_gdocs() + 
-  guides(fill=FALSE)
-
-p_purpose_hist
-
-
 # Analyzing Funded Amount
 p_funded_amnt_freq <- 
   loan %>%
@@ -266,6 +252,36 @@ p_funded_amnt_box <- loan %>%
 
 grid.arrange(p_funded_amnt_freq, p_funded_amnt_box, nrow = 2)
 
+#Credit Loss for Charged off Status
+p_creditloss_freq <- 
+  loan %>% filter(loan_status=="Charged Off") %>%
+  ggplot(aes(x = credit_loss, fill = "red")) +
+  geom_histogram() +
+  ggtitle("Credit Loss Histogram") +
+  labs(x = "Credit Loss", y = "Count") +
+  theme_gdocs() +
+  guides(fill = FALSE)
+
+p_creditloss_box <- loan %>% filter(loan_status=="Charged Off") %>%
+  ggplot(aes(x = factor(0), credit_loss)) +
+  geom_boxplot() +
+  theme_gdocs() +
+  coord_flip()
+
+grid.arrange(p_creditloss_freq, p_creditloss_box, nrow = 2)
+
+
+# Analyzing Purpose of the Loan
+p_purpose_hist <- loan %>%
+  ggplot(aes(x=purpose,fill="red")) +
+  geom_bar() +
+  coord_flip()+
+  ggtitle("Frequency of Purpose") +
+  labs(x = "Loan Purpose", y ="Count") +
+  theme_gdocs() + 
+  guides(fill=FALSE)
+
+p_purpose_hist
 
 # Analyzing Loan Status
 p_loan_status <- loan %>% 
@@ -304,23 +320,6 @@ p_Issue_Date_hist <- loan %>%
 
 p_Issue_Date_hist
 
-#Credit Loss for Charged off Status
-p_creditloss_freq <- 
-  loan %>% filter(loan_status=="Charged Off") %>%
-  ggplot(aes(x = credit_loss, fill = "red")) +
-  geom_histogram() +
-  ggtitle("Credit Loss Histogram") +
-  labs(x = "Credit Loss", y = "Count") +
-  theme_gdocs() +
-  guides(fill = FALSE)
-
-p_creditloss_box <- loan %>% filter(loan_status=="Charged Off") %>%
-  ggplot(aes(x = factor(0), credit_loss)) +
-  geom_boxplot() +
-  theme_gdocs() +
-  coord_flip()
-
-grid.arrange(p_creditloss_freq, p_creditloss_box, nrow = 2)
 
 
 #########################################################################################
