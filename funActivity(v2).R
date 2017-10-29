@@ -233,16 +233,19 @@ p_loan_amnt_freq <-
 p_loan_amnt_box <- loan %>% 
   ggplot(aes(x = factor(0), loan_amnt)) +
   geom_boxplot() +
+  labs(x = "", y = "Loan Amount") +
+  theme_gdocs() +
   coord_flip()
 
 grid.arrange(p_loan_amnt_freq, p_loan_amnt_box, nrow = 2)
+
 
 # Analyzing Funded Amount
 p_funded_amnt_freq <- 
   loan %>%
   ggplot(aes(x = funded_amnt, fill = "red")) +
   geom_histogram() +
-  ggtitle("Funded Amount Histogram") +
+  ggtitle("Frequeny Distribution - Funded Amount") +
   labs(x = "Funded Amount", y = "Count") +
   theme_gdocs() +
   guides(fill = FALSE)
@@ -250,17 +253,19 @@ p_funded_amnt_freq <-
 p_funded_amnt_box <- loan %>% 
   ggplot(aes(x = factor(0), loan_amnt)) +
   geom_boxplot() +
+  labs(x = "", y = "Funded Amount") +
   theme_gdocs() +
   coord_flip()
 
 grid.arrange(p_funded_amnt_freq, p_funded_amnt_box, nrow = 2)
+
 
 # Analyzing Annual Income
 p_annual_inc_freq <- 
   loan %>%
   ggplot(aes(x = annual_inc, fill = "red")) +
   geom_histogram() +
-  ggtitle("Annual Income Histogram") +
+  ggtitle("Frequency Distributino - Annual Income") +
   labs(x = "Annual Income", y = "Count") +
   theme_gdocs() +
   guides(fill = FALSE)
@@ -268,17 +273,19 @@ p_annual_inc_freq <-
 p_annual_inc_box <- loan %>%
   ggplot(aes(x = factor(0), annual_inc)) +
   geom_boxplot() +
+  labs(y = "Annual Income", x = "") +
   theme_gdocs() +
   coord_flip()
 
 grid.arrange(p_annual_inc_freq, p_annual_inc_box, nrow = 2)
+
 
 #Credit Loss for Charged off Status
 p_creditloss_freq <- 
   loan %>% filter(loan_status=="Charged Off") %>%
   ggplot(aes(x = credit_loss, fill = "red")) +
   geom_histogram() +
-  ggtitle("Credit Loss Histogram") +
+  ggtitle("Frequency Distribution - Credit Loss") +
   labs(x = "Credit Loss", y = "Count") +
   theme_gdocs() +
   guides(fill = FALSE)
@@ -286,10 +293,12 @@ p_creditloss_freq <-
 p_creditloss_box <- loan %>% filter(loan_status=="Charged Off") %>%
   ggplot(aes(x = factor(0), credit_loss)) +
   geom_boxplot() +
+  labs(x = "", y = "Credit Loss") +
   theme_gdocs() +
   coord_flip()
 
 grid.arrange(p_creditloss_freq, p_creditloss_box, nrow = 2)
+
 
 # Analyzing Purpose of the Loan
 p_purpose_hist <- loan %>%
@@ -298,21 +307,25 @@ p_purpose_hist <- loan %>%
   coord_flip()+
   ggtitle("Frequency of Purpose") +
   labs(x = "Loan Purpose", y ="Count") +
+  geom_text(stat='count',aes(label=..count..),vjust= 0.5, hjust = -0.1) +
   theme_gdocs() + 
   guides(fill=FALSE)
 
 p_purpose_hist
 
+
 # Analyzing Loan Status
 p_loan_status <- loan %>% 
   ggplot(aes(x = loan_status, fill = "red")) + 
   geom_bar() +
-  ggtitle("Loan Status Histogram") +
+  ggtitle("Frequency Distribution - Loan Status") +
   labs(x = "Loan Status", y = "Count") +
+  geom_text(stat='count',aes(label=..count..),vjust= -.75) +
   theme_gdocs() +
   guides(fill = FALSE)
 
 p_loan_status
+
 
 # Analyzing US States
 p_US_bar <- loan %>% 
@@ -323,11 +336,12 @@ p_US_bar <- loan %>%
   geom_bar(stat = "identity") +
   coord_flip()+
   labs(x = "States", y ="Frequency") +
-  ggtitle("Frequency of Loans per US States") +
+  ggtitle("Loan Frequency per US States") +
   theme_gdocs()+
   guides(fill = FALSE)
 
 p_US_bar
+
 
 # Analyzing Issued Date of Loans
 p_Issue_Date_hist <- loan %>%
@@ -363,6 +377,7 @@ p_purpose_loan_amt <-
 
 p_purpose_loan_amt
 
+
 #Home Ownership
 sumAmnts(loan, home_ownership)
 
@@ -380,6 +395,7 @@ p_home_ownership_loan_amt <-
 
 p_home_ownership_loan_amt
 
+
 #Term
 sumAmnts(loan, term)
 
@@ -396,6 +412,7 @@ p_term_loan_amt <-
 
 p_term_loan_amt
 
+
 #Interest Rate
 p_int_rate <- 
   loan %>% 
@@ -404,9 +421,9 @@ p_int_rate <-
   labs(x = "",y="Interest Rate") +
   ggtitle("Interest Rate") +
   guides(fill=guide_legend("Interest Rate")) + 
-  theme_gdocs()
-
-
+  theme_gdocs()+
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
 p_int_rate
 
 
@@ -419,12 +436,13 @@ p_emp_length_loan_amt <-
   summarise(total_loan = sum(loan_amnt)) %>% 
   ggplot(aes(x = emp_length, y = total_loan, fill = "red")) +
   geom_bar(stat = "identity") +
-  labs(x = "Employment Length", y ="Total Loan Issued") +
-  ggtitle("Employment Length vs Total Loan Amount") +
+  labs(x = "Length of Employment", y ="Total Loan Issued") +
+  ggtitle("Borrower's Employment Length vs Total Loan Amount") +
   theme_gdocs()+ 
   guides(fill=FALSE)
 
 p_emp_length_loan_amt
+
 
 #Grades
 sumAmnts(loan, grade)
@@ -435,15 +453,15 @@ p_grade_loan_amt <-
   summarise(total_loan = sum(loan_amnt)) %>% 
   ggplot(aes(x = grade, y = total_loan, fill = "red")) +
   geom_bar(stat = "identity") +
-  labs(x = "Grade", y ="Total Loan Issued") +
+  labs(x = "Loan Grade", y ="Total Loan Issued") +
   ggtitle("Loan Grade vs Total Loan Amount") +
   theme_gdocs()+ 
   guides(fill=FALSE)
 
 p_grade_loan_amt
 
-#Grades vs Interest
 
+#Grades vs Interest
 p_grade_int_rate <- 
   loan %>% 
   ggplot(aes(x = grade, y = int_rate_perc, fill = "red")) +
@@ -455,6 +473,7 @@ p_grade_int_rate <-
 
 p_grade_int_rate
 
+
 #Debt-To-Income
 p_dti <- 
   loan %>% 
@@ -463,10 +482,12 @@ p_dti <-
   labs(x = "",y="Debt To Income") +
   ggtitle("Debt To Income") +
   guides(fill=guide_legend("Debt To Income")) + 
-  theme_gdocs()
-
+  theme_gdocs() +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
 
 p_dti
+
 
 #########################################################################################
 #####BIVARIATE ANALYSIS PLOTS####
