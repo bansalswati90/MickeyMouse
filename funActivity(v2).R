@@ -338,21 +338,6 @@ p_loan_status <- loan %>%
 p_loan_status
 
 
-# Analyzing US States
-p_US_bar <- loan %>% 
-  group_by(addr_state) %>% 
-  summarise(number = n()) %>% 
-  arrange(desc(number)) %>%
-  ggplot(aes(x = reorder(addr_state, number), y = number, fill = "red")) +
-  geom_bar(stat = "identity") +
-  coord_flip()+
-  labs(x = "States", y ="Frequency") +
-  ggtitle("Loan Frequency per US States") +
-  theme_gdocs()+
-  guides(fill = FALSE)
-
-p_US_bar
-
 
 # Analyzing Issued Date of Loans
 p_Issue_Date_hist <- loan %>%
@@ -391,6 +376,65 @@ p_dti <-
   theme(axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
 p_dti
+
+
+
+# Analyzing US States
+p_US_bar <- loan %>% 
+  group_by(addr_state) %>% 
+  summarise(number = n()) %>% 
+  arrange(desc(number)) %>%
+  ggplot(aes(x = reorder(addr_state, number), y = number, fill = "red")) +
+  geom_bar(stat = "identity") +
+  coord_flip()+
+  labs(x = "States", y ="Frequency") +
+  ggtitle("Loan Frequency per US States") +
+  theme_gdocs()+
+  guides(fill = FALSE)
+
+p_US_bar
+
+
+
+####################################################################################
+#### Plotting Map Visualization for US States ####
+
+#states_map contains every Latitude and Longitude for each US States
+states_map <-map_data("state") 
+
+#states_code contains state names and their two letter abbreviated codes
+states_code <- as.data.frame(state.abb, state.name)  %>% add_rownames("State") %>% mutate(State=tolower(State))
+names(states_code) <- c('State', 'State_abrv')
+states_code$State_abrv <- as.character(states_code$State_abrv)
+
+loan <- merge(loan, states_code, by.x = 'addr_state', by.y = 'State_abrv', all.x = TRUE)
+
+
+# Basic structure of the US Map
+map <- ggplot(loan, aes(map_id = State)) + 
+  expand_limits(x = states_map$long, y = states_map$lat) +
+  theme(legend.position = "bottom",
+        axis.ticks = element_blank(), 
+        axis.title = element_blank(), 
+        axis.text =  element_blank())+
+  guides(fill = guide_colorbar(barwidth = 10, barheight = .5)) + 
+  scale_fill_gradient(low="#56B1F7", high="#132B43")
+
+# Plot showing US States with most Loan
+ggplot(loan, aes(map_id = State)) + 
+  geom_map(aes(fill = loan_amnt), map = states_map) +
+  expand_limits(x = states_map$long, y = states_map$lat) +
+  theme(legend.position = "bottom",
+        axis.ticks = element_blank(), 
+        axis.title = element_blank(), 
+        axis.text =  element_blank())+
+  guides(fill = guide_colorbar(barwidth = 10, barheight = .5)) + 
+  scale_fill_gradient(low="#56B1F7", high="#132B43") + 
+  guides(fill=guide_legend(title="Loan Amount")) +
+  labs(title = "States with most Loan") +
+  theme_gdocs()
+# North Dakota (ND) is missing from the dataset.
+# We see only few states are have dense concentration. That means, it is not uniformly allocated.
 
 
 #########################################################################################
@@ -692,6 +736,17 @@ p_emplen_creditloss <-
 
 p_emplen_creditloss
 
+# Revolving Balance
+sumAmnts(loan, revol_bal_bucket)
+
+sumAmnts(loan, revol_bal_bucket) %>%
+  ggplot(aes(x = revol_bal_bucket, y = total_issued, fill = "red")) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = total_issued),position = position_stack(vjust=0.5),colour="white") +
+  coord_flip() +
+  labs(x = "Revolving Balance", y ="Total Loan Issued") +
+  ggtitle("Revoling Balance for What Purpose") +
+  theme_gdocs()
 
 
 ####################################################################################
@@ -769,68 +824,6 @@ p_grade_creditloss_term
 
 
 
-####################################################################################
-#### Plotting Map Visualization for US States ####
-
-#states_map contains every Latitude and Longitude for each US States
-states_map <-map_data("state") 
-
-#states_code contains state names and their two letter abbreviated codes
-states_code <- as.data.frame(state.abb, state.name)  %>% add_rownames("State") %>% mutate(State=tolower(State))
-names(states_code) <- c('State', 'State_abrv')
-states_code$State_abrv <- as.character(states_code$State_abrv)
-
-loan <- merge(loan, states_code, by.x = 'addr_state', by.y = 'State_abrv', all.x = TRUE)
-
-
-# Basic structure of the US Map
-map <- ggplot(loan, aes(map_id = State)) + 
-  expand_limits(x = states_map$long, y = states_map$lat) +
-  theme(legend.position = "bottom",
-        axis.ticks = element_blank(), 
-        axis.title = element_blank(), 
-        axis.text =  element_blank())+
-  guides(fill = guide_colorbar(barwidth = 10, barheight = .5)) + 
-  scale_fill_gradient(low="#56B1F7", high="#132B43")
-
-# Plot showing US States with most Loan
-ggplot(loan, aes(map_id = State)) + 
-  geom_map(aes(fill = loan_amnt), map = states_map) +
-  expand_limits(x = states_map$long, y = states_map$lat) +
-  theme(legend.position = "bottom",
-        axis.ticks = element_blank(), 
-        axis.title = element_blank(), 
-        axis.text =  element_blank())+
-  guides(fill = guide_colorbar(barwidth = 10, barheight = .5)) + 
-  scale_fill_gradient(low="#56B1F7", high="#132B43") + 
-  guides(fill=guide_legend(title="Loan Amount")) +
-  labs(title = "States with most Loan") +
-  theme_gdocs()
-# North Dakota (ND) is missing from the dataset.
-# We see only few states are have dense concentration. That means, it is not uniformly allocated.
-
-
-# States Track Record
-map + geom_map(aes(fill = loan_amnt), map = states_map) +
-  guides(fill=guide_legend(title="Loan Amount")) +
-  labs(title = "Loan Distribution") + 
-  coord_map()+
-  facet_grid(~ loan_status, shrink = TRUE) +
-  theme_gdocs()
-
-
-
-# Revolving Balance
-sumAmnts(loan, revol_bal_bucket)
-
-sumAmnts(loan, revol_bal_bucket) %>%
-  ggplot(aes(x = revol_bal_bucket, y = total_issued, fill = "red")) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = total_issued),position = position_stack(vjust=0.5),colour="white") +
-  coord_flip() +
-  labs(x = "Revolving Balance", y ="Total Loan Issued") +
-  ggtitle("Revoling Balance for What Purpose") +
-  theme_gdocs()
 
 #########################################################################################
 ####Correlation Matrix####
