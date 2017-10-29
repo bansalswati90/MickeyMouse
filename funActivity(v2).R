@@ -509,6 +509,7 @@ p_interest_creditloss <-
         geom_bar(stat="identity") + 
   labs(x="Interest Rate",y="Credit Loss")+
   ggtitle("Interst Rate vs Credit Loss")+
+  geom_text(aes(label=CreditLoss),vjust= -.5,  size = 4) +
   guides(fill=FALSE) +
   theme_gdocs()
 
@@ -522,6 +523,7 @@ aes(x = int_rate_perc, y = credit_loss))+
   theme_gdocs()
 
 grid.arrange(p_interest_creditloss,p_interest_creditloss_line,ncol=2)
+
 
 
 #Funded Amount vs Credit Loss
