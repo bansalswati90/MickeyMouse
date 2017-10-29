@@ -636,7 +636,7 @@ p_int_rate_creditloss_term <- loan_charged_home %>%
   ggplot( aes(x = int_rate_bucket, y = credit_loss, fill = term))+
   geom_bar(stat="identity", position = "stack") + 
   labs(x="Interest Rate Buckets",y="Credit Loss") +
-  ggtitle("Credit Loss vs Interest Rates") +
+  ggtitle("Credit Loss vs Interest Rates (for Mortaged and Rented House People)") +
   theme_gdocs()
 p_int_rate_creditloss_term
 
@@ -646,7 +646,7 @@ p_grade_creditloss_term <-loan_charged_home %>%
 ggplot( aes(x = annual_inc_bucket, y = credit_loss, fill = term))+
   geom_bar(stat="identity", position = "stack") + 
   labs(x="Annual Income",y="Credit Loss") +
-  ggtitle("Credit Losses across various Annual Income Range") +
+  ggtitle("Credit Losses across various Annual Income Range (for Mortaged and Rented House People)") +
   theme_gdocs()
 p_grade_creditloss_term
 
@@ -655,7 +655,44 @@ p_grade_creditloss_term <-loan_charged_home %>%
 ggplot( aes(x = funded_amnt_bucket, y = credit_loss, fill = term))+
   geom_bar(stat="identity", position = "stack") + 
   labs(x="Funded Amount",y="Credit Loss") +
-  ggtitle("Credit Losses across various Funded Income Range") +
+  ggtitle("Credit Losses across various Funded Income Range (for Mortaged and Rented House People)") +
+  theme_gdocs()
+p_grade_creditloss_term
+
+
+
+
+# In UNIVARIATE Analysis, we have noticed that Debt Consolidation, Credit Card and Home Improvement have major population
+# We are not considering OTHERS as it can be anything.
+loan_charged_home_purp_top3 <- loan_charged_home %>% 
+  filter(purpose %in%  c("debt_consolidation", "credit_card", "home_improvement"))
+
+
+# Plot showing the Credit Loss against Interest Rates of Defaulters with Mortgaged or Rented houses for Top3 Loan Purposes mentioned
+p_int_rate_creditloss_purp_term <- loan_charged_home_purp_top3 %>%
+  ggplot( aes(x = int_rate_bucket, y = credit_loss, fill = term))+
+  geom_bar(stat="identity", position = "stack") + 
+  labs(x="Interest Rate Buckets",y="Credit Loss") +
+  ggtitle("Credit Loss vs Interest Rates (for TOp3 Purpose provide with  Mortaged and Rented House People)") +
+  theme_gdocs()
+p_int_rate_creditloss_purp_term
+
+
+# Plot showing the Credit Loss against Annual Income Ranges of Defaulters with Mortgaged or Rented house for Top3 Loan Purposes mentioned
+p_grade_creditloss_term <-loan_charged_home_purp_top3 %>%
+  ggplot( aes(x = annual_inc_bucket, y = credit_loss, fill = term))+
+  geom_bar(stat="identity", position = "stack") + 
+  labs(x="Annual Income",y="Credit Loss") +
+  ggtitle("Credit Losses across various Annual Income Range (for TOp3 Purpose provide with  Mortaged and Rented House People)") +
+  theme_gdocs()
+p_grade_creditloss_term
+
+# Plot showing the Credit Loss against Funded Amount Ranges of Defaulters with Mortgaged or Rented house for Top3 Loan Purposes mentioned
+p_grade_creditloss_term <-loan_charged_home_purp_top3 %>%
+  ggplot( aes(x = funded_amnt_bucket, y = credit_loss, fill = term))+
+  geom_bar(stat="identity", position = "stack") + 
+  labs(x="Funded Amount",y="Credit Loss") +
+  ggtitle("Credit Losses across various Funded Income Range (for TOp3 Purpose provide with  Mortaged and Rented House People)") +
   theme_gdocs()
 p_grade_creditloss_term
 
