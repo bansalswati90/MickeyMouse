@@ -354,68 +354,6 @@ p_Issue_Date_hist <- loan %>%
 
 p_Issue_Date_hist
 
-
-
-#########################################################################################
-####SEGMENTED ANALYSIS####
-
-#Purpose
-sumAmnts(loan, purpose)
-
-p_purpose_loan_amt <- 
-  loan %>% 
-  group_by(purpose) %>% 
-  summarise(total_loan = sum(loan_amnt)) %>% 
-  arrange(desc(total_loan)) %>%
-  ggplot(aes(x = reorder(purpose,total_loan), y = total_loan, fill = "red")) +
-  geom_bar(stat = "identity") +
-  coord_flip()+
-  geom_text(aes(label= total_loan),vjust= 0.5, hjust = -0.1, size = 3) +
-  labs(x = "Purpose", y ="Total Loan Issued") +
-  ggtitle("Purpose vs Total Loan Amount") +
-  theme_gdocs()+ 
-  guides(fill=FALSE)
-
-p_purpose_loan_amt
-
-
-#Home Ownership
-sumAmnts(loan, home_ownership)
-
-p_home_ownership_loan_amt <- 
-  loan %>% 
-  group_by(home_ownership) %>% 
-  summarise(total_loan = sum(loan_amnt)) %>% 
-  arrange(desc(total_loan)) %>%
-  ggplot(aes(x = reorder(home_ownership,-total_loan), y = total_loan, fill = "red")) +
-  geom_bar(stat = "identity") +
-  labs(x = "Home Ownership", y ="Total Loan Issued") +
-  ggtitle("Home Ownership vs Total Loan Amount") +
-  geom_text(aes(label=total_loan),vjust= -0.5, size = 3) +
-  theme_gdocs()+ 
-  guides(fill=FALSE)
-
-p_home_ownership_loan_amt
-
-
-#Term
-sumAmnts(loan, term)
-
-p_term_loan_amt <- 
-  loan %>% 
-  group_by(term) %>% 
-  summarise(total_loan = sum(loan_amnt)) %>% 
-  ggplot(aes(x = term, y = total_loan, fill = "red")) +
-  geom_bar(stat = "identity") +
-  labs(x = "Term", y ="Total Loan Issued") +
-  ggtitle("Term vs Total Loan Amount") +
-  geom_text(aes(label=total_loan),vjust= -0.5, size = 3.5) +
-  theme_gdocs()+ 
-  guides(fill=FALSE)
-
-p_term_loan_amt
-
-
 #Interest Rate
 p_int_rate <- 
   loan %>% 
@@ -430,21 +368,88 @@ p_int_rate <-
 p_int_rate
 
 
+#Debt-To-Income
+p_dti <- 
+  loan %>% 
+  ggplot(aes(x =factor(0),dti, fill = dti_bucket)) +
+  geom_boxplot() +
+  labs(x = "",y="Debt To Income") +
+  ggtitle("Debt To Income") +
+  guides(fill=guide_legend("Debt To Income")) + 
+  theme_gdocs() +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+p_dti
+
+
+#########################################################################################
+####SEGMENTED ANALYSIS####
+
+#Purpose
+sumAmnts(loan, purpose)
+
+p_purpose_loan_amt <- 
+  loan %>% 
+  group_by(purpose, loan_status) %>% 
+  summarise(total_loan = sum(loan_amnt)) %>% 
+  arrange(desc(total_loan)) %>%
+  ggplot(aes(x = reorder(purpose,total_loan), y = total_loan, fill = loan_status)) +
+  geom_bar(stat = "identity") +
+  coord_flip()+
+  labs(x = "Purpose", y ="Total Loan Issued") +
+  ggtitle("Purpose vs Total Loan Amount") +
+  theme_gdocs()+ 
+  guides(fill=guide_legend("Loan Status"))
+p_purpose_loan_amt
+
+
+#Home Ownership
+sumAmnts(loan, home_ownership)
+
+p_home_ownership_loan_amt <- 
+  loan %>% 
+  group_by(home_ownership, loan_status) %>% 
+  summarise(total_loan = sum(loan_amnt)) %>% 
+  arrange(desc(total_loan)) %>%
+  ggplot(aes(x = reorder(home_ownership,-total_loan), y = total_loan, fill = loan_status)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Home Ownership", y ="Total Loan Issued") +
+  ggtitle("Home Ownership vs Total Loan Amount") +
+  theme_gdocs()+ 
+  guides(fill=guide_legend("Loan Status"))
+
+p_home_ownership_loan_amt
+
+
+#Term
+sumAmnts(loan, term)
+
+p_term_loan_amt <- 
+  loan %>% 
+  group_by(term, loan_status) %>% 
+  summarise(total_loan = sum(loan_amnt)) %>% 
+  ggplot(aes(x = term, y = total_loan, fill = loan_status)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Term", y ="Total Loan Issued") +
+  ggtitle("Term vs Total Loan Amount") +
+  theme_gdocs()+ 
+  guides(fill=guide_legend("Loan Status"))
+p_term_loan_amt
+
+
 #Employment Length
 sumAmnts(loan, emp_length)
 
 p_emp_length_loan_amt <- 
   loan %>% 
-  group_by(emp_length) %>% 
+  group_by(emp_length, loan_status) %>% 
   summarise(total_loan = sum(loan_amnt)) %>% 
-  ggplot(aes(x = emp_length, y = total_loan, fill = "red")) +
+  ggplot(aes(x = emp_length, y = total_loan, fill = loan_status)) +
   geom_bar(stat = "identity") +
   labs(x = "Length of Employment", y ="Total Loan Issued") +
   ggtitle("Borrower's Employment Length vs Total Loan Amount") +
-  geom_text(aes(label=total_loan),vjust= -.5,  size = 4) +
   theme_gdocs()+ 
-  guides(fill=FALSE)
-
+  guides(fill=guide_legend("Loan Status"))
 p_emp_length_loan_amt
 
 
@@ -453,16 +458,14 @@ sumAmnts(loan, grade)
 
 p_grade_loan_amt <- 
   loan %>% 
-  group_by(grade) %>% 
+  group_by(grade, loan_status) %>% 
   summarise(total_loan = sum(loan_amnt)) %>% 
-  ggplot(aes(x = grade, y = total_loan, fill = "red")) +
+  ggplot(aes(x = grade, y = total_loan, fill = loan_status)) +
   geom_bar(stat = "identity") +
   labs(x = "Loan Grade", y ="Total Loan Issued") +
   ggtitle("Loan Grade vs Total Loan Amount") +
-  geom_text(aes(label=total_loan),vjust= -.5,  size = 4) +
   theme_gdocs()+ 
-  guides(fill=FALSE)
-
+  guides(fill=guide_legend("Loan Status"))
 p_grade_loan_amt
 
 
@@ -475,23 +478,8 @@ p_grade_int_rate <-
   ggtitle("Loan Grade vs Interest Rates") +
   theme_gdocs()+ 
   guides(fill=FALSE)
-
 p_grade_int_rate
 
-
-#Debt-To-Income
-p_dti <- 
-  loan %>% 
-  ggplot(aes(x =factor(0),dti, fill = dti_bucket)) +
-  geom_boxplot() +
-  labs(x = "",y="Debt To Income") +
-  ggtitle("Debt To Income") +
-  guides(fill=guide_legend("Debt To Income")) + 
-  theme_gdocs() +
-  theme(axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
-
-p_dti
 
 
 #########################################################################################
