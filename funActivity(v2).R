@@ -43,11 +43,11 @@ customformatdate <- function(x) {
   x <- as.Date(x, format = "%d-%b-%y")
 }
 
-# Create summary by grouping ... and showing Funded Amount and Number of Loans
+# Create summary by grouping ... and showing Total Loan Amount and Number of Loans
 sumAmnts <- function(x, ...) {
   x %>% 
     group_by(., ...) %>%
-    summarise(total_issued = round(sum(funded_amnt)),
+    summarise(total_issued = round(sum(loan_amnt)),
               n = n())
 }
 
@@ -55,9 +55,9 @@ sumAmnts <- function(x, ...) {
 sumStats <- function(x, ...) {
   x %>% 
     group_by(., ...) %>%
-    summarise(median = round(median(funded_amnt)),
-              average = round(mean(funded_amnt)),
-              stdev = round(sd(funded_amnt)))
+    summarise(median = round(median(loan_amnt)),
+              average = round(mean(loan_amnt)),
+              stdev = round(sd(loan_amnt)))
 }
 
 
