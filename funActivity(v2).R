@@ -536,6 +536,7 @@ p_fundamt_creditloss <-
   labs(x="Funded Amount",y="Credit Loss")+
   ggtitle("Funded Amount vs Credit Loss Bar Chart")+
   guides(fill=FALSE) +
+  geom_text(aes(label=CreditLoss),vjust= -.5,  size = 4) +
   theme_gdocs() +
   theme(axis.text.x=element_text(angle=45,hjust=1))
 
@@ -550,6 +551,8 @@ p_fundamt_creditloss_line <-
 
 grid.arrange(p_fundamt_creditloss,p_fundamt_creditloss_line,ncol=2)
 
+
+
 #Debt To Income Ratio vs Credit Loss
 p_dti_creditloss <-
   ggplot(loan_chargedoff %>% 
@@ -559,6 +562,7 @@ p_dti_creditloss <-
   geom_bar(stat="identity") + 
   labs(x="Debt To Income",y="Credit Loss")+
   ggtitle("Debt To Income Ratio vs Credit Loss")+
+  geom_text(aes(label=CreditLoss),vjust= -.5,  size = 4) +
   guides(fill=FALSE) + 
   theme_gdocs()
 
@@ -573,10 +577,13 @@ p_annualincome_creditloss <-
   geom_bar(stat="identity") + 
   labs(x="Annual Income",y="Credit Loss") +
   ggtitle("Annual Income vs Credit Loss") +
+  geom_text(aes(label=CreditLoss),vjust= -.5,  size = 4) +
   guides(fill=FALSE) +
   theme_gdocs()
 
 p_annualincome_creditloss
+
+
 
 #Term vs Credit Loss
 p_term_creditloss <-
@@ -587,10 +594,12 @@ p_term_creditloss <-
   geom_bar(stat="identity") + 
   labs(x="Term",y="Credit Loss") +
   ggtitle("Credit Loss for Term") +
+  geom_text(aes(label=CreditLoss),vjust= -.5,  size = 4) +
   guides(fill=FALSE) +
   theme_gdocs()
 
 p_term_creditloss
+
 
 #Home ownership vs Credit Loss
 p_homeownership_creditloss <- 
@@ -601,10 +610,13 @@ p_homeownership_creditloss <-
   geom_bar(stat="identity") + 
   labs(x="home_ownership",y="Credit Loss") +
   ggtitle("Credit Loss for home_ownership") +
+  geom_text(aes(label=CreditLoss),vjust= -.5,  size = 4) +
   guides(fill=FALSE) +
   theme_gdocs()
 
 p_homeownership_creditloss
+
+
 
 #Employment Length vs Credit Loss
 p_emplen_creditloss <- 
@@ -615,10 +627,52 @@ p_emplen_creditloss <-
   geom_bar(stat="identity") + 
   labs(x="Employment Length",y="Credit Loss") +
   ggtitle("Employment Length vs Credit Loss") +
+  geom_text(aes(label=CreditLoss),vjust= -.5,  size = 4) +
   guides(fill=FALSE) +
   theme_gdocs()
 
 p_emplen_creditloss
+
+
+
+####################################################################################
+####MULTIVARIATE ANALYSIS####
+
+# From Univariate Analysis it was evident that RENT and MORTGAGE are having majority of population.
+#Hence, filtering the data frame with these two.
+loan_charged_home <- loan_chargedoff %>%
+                     filter(home_ownership == "MORTGAGE" || home_ownership == "RENT")
+
+# Plot showing the Credit Loss against Interest Rates of Defaulters with Mortgaged or Rented houses
+p_int_rate_creditloss_term <- loan_charged_home %>%
+  ggplot( aes(x = int_rate_bucket, y = credit_loss, fill = term))+
+  geom_bar(stat="identity", position = "stack") + 
+  labs(x="Interest Rate Buckets",y="Credit Loss") +
+  ggtitle("Credit Loss vs Interest Rates") +
+  theme_gdocs()
+p_int_rate_creditloss_term
+
+
+# Plot showing the Credit Loss against Annual Income Ranges of Defaulters with Mortgaged or Rented house 
+p_grade_creditloss_term <-loan_charged_home %>%
+ggplot( aes(x = annual_inc_bucket, y = credit_loss, fill = term))+
+  geom_bar(stat="identity", position = "stack") + 
+  labs(x="Annual Income",y="Credit Loss") +
+  ggtitle("Credit Losses across various Annual Income Range") +
+  theme_gdocs()
+p_grade_creditloss_term
+
+# Plot showing the Credit Loss against Funded Amount Ranges of Defaulters with Mortgaged or Rented house 
+p_grade_creditloss_term <-loan_charged_home %>%
+ggplot( aes(x = funded_amnt_bucket, y = credit_loss, fill = term))+
+  geom_bar(stat="identity", position = "stack") + 
+  labs(x="Funded Amount",y="Credit Loss") +
+  ggtitle("Credit Losses across various Funded Income Range") +
+  theme_gdocs()
+p_grade_creditloss_term
+
+
+
 ####################################################################################
 ### Plotting Map Visualization for US States 
 
