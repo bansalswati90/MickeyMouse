@@ -156,10 +156,11 @@ loan$annual_inc_bucket <- factor(loan$annual_inc_bucket,
 loan <- loan %>%
   mutate(
     dti_bucket = ifelse(dti < 8,"< 8",
-                        ifelse((dti >= 8 & int_rate_perc < 12),"8-12",
-                        ifelse((dti >= 12 & int_rate_perc < 18),"12-18",
-                        ifelse((int_rate_perc >= 18 & int_rate_perc < 24),"18-24",
-                        ifelse(int_rate_perc >= 24, "> 24","0"))))))
+                        ifelse((dti >= 8 & dti < 12),"8-12",
+                        ifelse((dti >= 12 & dti < 18),"12-18",
+                        ifelse((dti >= 18 & dti < 24),"18-24","> 24")))))
+loan$dti_bucket <- factor(loan$dti_bucket,
+                                 levels=c("< 8","8-12","12-18","18-24","> 24"),ordered=TRUE)
 
 
 # Creating buckets for 2 year delinquency
@@ -207,7 +208,7 @@ loan <- loan %>%
                         ifelse((int_rate_perc >= 14 & int_rate_perc < 17),"14-17",
                         ifelse(int_rate_perc >= 17, "> 17","0"))))))
 loan$int_rate_bucket <- factor(loan$int_rate_bucket, 
-                               levels = c("0","< 8", "8-11", "11-14", "14-17", "> 17"))
+                               levels = c("0","< 8", "8-11", "11-14", "14-17", "> 17"),ordered=TRUE)
 
 #Calculating the credit loss as funded_amt-total_rec_prncp
 loan$credit_loss <- loan$funded_amnt - loan$total_rec_prncp
@@ -220,7 +221,7 @@ loan$credit_loss <- loan$funded_amnt - loan$total_rec_prncp
 # Analyzing Loan Amounts with respects to Purpose of the Loan
 sumAmnts(loan, purpose)
 
-p1 <- loan %>%
+frequency_of_purpose <- loan %>%
   ggplot(aes(x=purpose,fill="red")) +
   geom_bar() +
   coord_flip()+
@@ -230,7 +231,7 @@ p1 <- loan %>%
   theme_gdocs() + 
   guides(fill=FALSE)
 
-p2 <- sumAmnts(loan, purpose) %>%
+issued_amount_purpose <- sumAmnts(loan, purpose) %>%
   ggplot(aes(x = purpose, y = total_issued, fill = "red")) +
   geom_bar(stat = "identity") +
   coord_flip() +
@@ -239,7 +240,7 @@ p2 <- sumAmnts(loan, purpose) %>%
   theme_gdocs()  + 
   guides(fill=FALSE)
 
-grid.arrange(p1, p2, nrow = 1)
+grid.arrange(frequency_of_purpose, issued_amount_purpose, nrow = 1)
 
 
 
