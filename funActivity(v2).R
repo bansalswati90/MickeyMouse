@@ -60,6 +60,17 @@ sumStats <- function(x, ...) {
               stdev = round(sd(loan_amnt)))
 }
 
+# Function to determine the outliers in a measure
+CheckOutlierExist <- function(dt, var) {
+  var_name <- eval(substitute(var),eval(dt))
+  na1 <- sum(is.na(var_name))
+  m1 <- mean(var_name, na.rm = T)
+  outlier <- boxplot.stats(var_name)$out
+  mo <- mean(outlier)
+  var_name <- ifelse(var_name %in% outlier, NA, var_name)
+  na2 <- sum(is.na(var_name))
+  cat("Outliers identified:", na2 - na1, "n")
+}
 
 #####################################################################################
 ### CLEANING DATA
@@ -388,16 +399,26 @@ p_dti
 # Annual Income
 CheckOutlierExist(loan,annual_inc) #function call
 summary(loan$annual_inc)
-hist(loan$annual_inc)
+hist(loan$annual_inc, main = "Histogram of Annual Income")
 
-outlier_range<-1.5*IQR(loan$annual_inc)
+outlier_range<-1.5*IQR(loan$annual_inc) #1843 outlier
 upper_whisker=unname(quantile(loan$annual_inc,0.75))+outlier_range
 lower_whisker=unname(quantile(loan$annual_inc,0.25))-outlier_range
 loan <- loan[which((loan$annual_inc>=upper_whisker | loan$annual_inc<=lower_whisker)==FALSE),]
 
 summary(loan$annual_inc)
-hist(loan$annual_inc)
+hist(loan$annual_inc, main = "Histogram of Annual Income")
+#Removed extra outliers
 
+# Loan Amount
+CheckOutlierExist(loan,loan_amnt) #923 outliers
+hist(loan$loan_amnt, main = "Histogram of Loan Amount")
+# It is OK, we are considering the outlier. Outlier treatment is not specifically needed.
+
+# Funded Amount
+CheckOutlierExist(loan,funded_amnt) #797 outliers
+hist(loan$loan_amnt, main = "Histogram of Funded Amount")
+# It is OK, we are considering the outlier. Outlier treatment is not specifically needed.
 
 #########################################################################################
 ####SEGMENTED ANALYSIS####
