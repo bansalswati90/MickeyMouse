@@ -475,7 +475,6 @@ loan_chargedoff <- filter(loan, loan_status=="Charged Off")
 #Analysing only charged off loan status
 
 #Interst Rate vs Credit Loss
-#Bargraph
 p_interest_creditloss <- 
           ggplot(loan_chargedoff %>%
          select(int_rate_bucket, credit_loss) %>% 
@@ -487,7 +486,6 @@ p_interest_creditloss <-
   guides(fill=FALSE) +
   theme_gdocs()
 
-#Scatterplot
 p_interest_creditloss_line <- 
   ggplot(loan_chargedoff,
 aes(x = int_rate_perc, y = credit_loss))+
@@ -501,7 +499,6 @@ grid.arrange(p_interest_creditloss,p_interest_creditloss_line,ncol=2)
 
 
 #Funded Amount vs Credit Loss
-#Bargraph
 p_fundamt_creditloss <- 
   ggplot(loan_chargedoff %>% 
            select(funded_amnt_bucket, credit_loss) %>% 
@@ -509,17 +506,17 @@ p_fundamt_creditloss <-
            summarise(CreditLoss = sum(credit_loss)),aes(x = funded_amnt_bucket, y = CreditLoss, fill = "red"))+
   geom_bar(stat="identity") + 
   labs(x="Funded Amount",y="Credit Loss")+
-  ggtitle("Funded Amount vs Credit Loss")+
+  ggtitle("Funded Amount vs Credit Loss Bar Chart")+
   guides(fill=FALSE) +
-  theme(axis.text.x=element_text(angle=45,hjust=1))+
-  theme_gdocs()
+  theme_gdocs() +
+  theme(axis.text.x=element_text(angle=45,hjust=1))
 
-#Scatterplot
 p_fundamt_creditloss_line <- 
   ggplot(loan_chargedoff,
          aes(x = funded_amnt, y = credit_loss))+
   geom_point(alpha=0.1, size=3) + geom_smooth()+
-  labs(x="Funded Amount vs Credit Loss")+
+  labs(x="Funded Amount",y="Credit Loss")+
+  ggtitle("Funded Amount vs Credit Loss Scatter Plot")+
   guides(fill=FALSE) +
   theme_gdocs()
 
@@ -581,6 +578,19 @@ p_homeownership_creditloss <-
 
 p_homeownership_creditloss
 
+#Employment Length vs Credit Loss
+p_emplen_creditloss <- 
+  ggplot(loan_chargedoff %>% 
+           select(emp_length, credit_loss) %>% 
+           group_by(emp_length) %>% 
+           summarise(CreditLoss = sum(credit_loss)),aes(x = emp_length, y = CreditLoss, fill = "red"))+
+  geom_bar(stat="identity") + 
+  labs(x="Employment Length",y="Credit Loss") +
+  ggtitle("Employment Length vs Credit Loss") +
+  guides(fill=FALSE) +
+  theme_gdocs()
+
+p_emplen_creditloss
 ####################################################################################
 ### Plotting Map Visualization for US States 
 
